@@ -733,8 +733,8 @@ class UsersCoursesList(SecureAPIView):
         log.debug('User "{}" has been automatically added in cohort "{}" for course "{}"'.format(
             user.username, default_cohort.name, course_descriptor.display_name)
         )
-        response_data['uri'] = '{}/{}'.format(base_uri, course_key)
-        response_data['id'] = unicode(course_key)
+        response_data['uri'] = '{}/{}'.format(base_uri, course_descriptor.id)
+        response_data['id'] = unicode(course_descriptor.id)
         response_data['name'] = course_descriptor.display_name
         response_data['is_active'] = course_enrollment.is_active
         return Response(response_data, status=status.HTTP_201_CREATED)
@@ -756,8 +756,8 @@ class UsersCoursesList(SecureAPIView):
             # database, but the enrollment row in the SQL database still exists
             if course_descriptor:
                 course_data = {
-                    "id": unicode(course_key),
-                    "uri": '{}/{}'.format(base_uri, unicode(course_key)),
+                    "id": unicode(course_descriptor.id),
+                    "uri": '{}/{}'.format(base_uri, unicode(course_descriptor.id)),
                     "is_active": enrollment.is_active,
                     "name": course_descriptor.display_name,
                     "start": getattr(course_descriptor, 'start', None),

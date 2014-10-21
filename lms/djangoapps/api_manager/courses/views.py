@@ -74,8 +74,8 @@ def _serialize_content(request, content_key, content_descriptor):
     This should probably evolve to use DRF serializers
     """
     data = {}
-    if hasattr(content_descriptor, 'id') and unicode(content_descriptor.id) == unicode(content_key):
-        content_id = unicode(content_key)
+    if hasattr(content_descriptor, 'id'):
+        content_id = unicode(content_descriptor.id)
     else:
         content_id = unicode(content_descriptor.scope_ids.usage_id)
     data['id'] = unicode(content_id)
