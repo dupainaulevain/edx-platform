@@ -240,7 +240,7 @@ def xblock_view_handler(request, usage_key_string, view_name):
             # Set up the context to be passed to each XBlock's render method.
             context = {
                 'is_pages_view': is_pages_view,     # This setting disables the recursive wrapping of xblocks
-                'is_unit_page': is_unit(xblock),
+                'is_unit_page': is_unit(xblock) or xblock.category == "library",
                 'root_xblock': xblock if (view_name == 'container_preview') else None,
                 'reorderable_items': reorderable_items
             }

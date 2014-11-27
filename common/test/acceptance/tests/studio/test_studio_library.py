@@ -3,6 +3,7 @@ Acceptance tests for Content Libraries in Studio
 """
 
 from .base_studio_test import StudioLibraryTest
+from ...fixtures.course import XBlockFixtureDesc
 from ...pages.studio.library import LibraryPage
 
 
@@ -75,3 +76,45 @@ class LibraryEditPageTest(StudioLibraryTest):
         self.assertEqual(len(self.lib_page.xblocks), 1)
         problem_block = self.lib_page.xblocks[0]
         self.assertIn("Laura Roslin", problem_block.student_content)
+
+
+class LibraryWithDepthTest(StudioLibraryTest):
+    """
+    Tests for a lbirary that has a hierarchy of content.
+    """
+    def setUp(self):  # pylint: disable=arguments-differ
+        """
+        Create a library with a content hierarchy, and navigate to the library
+        edit page.
+        """
+        super(LibraryWithDepthTest, self).setUp(is_staff=True)
+        self.lib_page = LibraryPage(self.browser, self.library_key)
+        self.lib_page.visit()
+        self.lib_page.wait_until_ready()
+
+    def populate_library_fixture(self, library_fixture):
+        """
+        Define the blocks that will be in the library at first.
+        """
+        # self, category, display_name, data=None, metadata=None, grader_type=None, publish='make_public')
+        library_fixture.add_children(
+            XBlockFixtureDesc('html', "First Block", data="A boring HTML block."),
+            XBlockFixtureDesc('vertical', "A block with two children").add_children(
+                XBlockFixtureDesc('html', "First child of the vertical", data="Hello world."),
+                XBlockFixtureDesc('html', "Second child of the vertical", data="Hello world."),
+            )
+        )
+
+    def test_hierarchical_content(self):
+        """
+        Test that we can view the library with hierarchical content, and that
+        any verticals in the library are shown collapsed, with a "View" link.
+        The container page for library verticals has not yet been implemented
+        so we do not test it.
+        """
+        self.assertEqual(len(self.lib_page.xblocks), 2)
+        vert_block = self.lib_page.xblocks[1]
+        self.assertTrue(vert_block.container_link_url)  # Check that it has a "View" link to the container page
+        vert_block.edit()
+        vert_block.save_settings()
+        self.assertTrue(False)  # Screenshot

@@ -86,7 +86,9 @@ def xblock_has_own_studio_page(xblock, parent_xblock=None):
     elif category == 'vertical':
         if parent_xblock is None:
             parent_xblock = get_parent_xblock(xblock)
-        return is_unit(parent_xblock) if parent_xblock else False
+        if parent_xblock:
+            return is_unit(parent_xblock) or parent_xblock.category == 'library'
+        return False
 
     # All other xblocks with children have their own page
     return xblock.has_children

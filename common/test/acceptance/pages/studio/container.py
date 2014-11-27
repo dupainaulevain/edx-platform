@@ -337,6 +337,13 @@ class XBlockWrapper(PageObject):
     def preview_selector(self):
         return self._bounded_selector('.xblock-student_view,.xblock-author_view')
 
+    @property
+    def container_link_url(self):
+        """
+        The href value of the "View" button that links to a container page, if any
+        """
+        return self.q(css=self._bounded_selector('.xblock-header-secondary .action-view a')).attrs("href")[0]
+
     def go_to_container(self):
         """
         Open the container page linked to by this xblock, and return
