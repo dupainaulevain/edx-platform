@@ -121,7 +121,7 @@ class UnitTestLibraries(ModuleStoreTestCase):
             'library': lib_key.library,
             'display_name': "A Duplicate key, same as 'lib'",
         })
-        self.assertIn('already exists', parse_json(response)['ErrMsg'])
+        self.assertIn('already a library defined', parse_json(response)['ErrMsg'])
         self.assertEqual(response.status_code, 400)
 
     ######################################################

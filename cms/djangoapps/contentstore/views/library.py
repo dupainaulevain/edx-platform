@@ -109,12 +109,13 @@ def _create_library(request):
     if not auth.has_access(request.user, CourseCreatorRole()):
         log.exception(u"User %s tried to create a library without permission", request.user.username)
         raise PermissionDenied()
+    display_name = None
     try:
+        display_name = request.json['display_name']
         org = request.json['org']
         library = request.json.get('number', None)
         if library is None:
             library = request.json['library']
-        display_name = request.json['display_name']
         store = modulestore()
         with store.default_store(ModuleStoreEnum.Type.split):
             new_lib = store.create_library(
@@ -124,17 +125,24 @@ def _create_library(request):
                 fields={"display_name": display_name},
             )
     except KeyError as error:
-        err_msg = ugettext_noop("Unable to create library - missing expected JSON key '{err}'").format(err=error.message)
-        log.exception(err_msg)
-        return JsonResponseBadRequest({"ErrMsg": _(err_msg)})
-    except InvalidKeyError:
-        err_msg = ugettext_noop("Unable to create library - invalid key.")
-        log.exception(err_msg)
-        return JsonResponseBadRequest({"ErrMsg": _(err_msg)})
+        log.exception("Unable to create library - missing required JSON key.")
+        return JsonResponseBadRequest({
+            "ErrMsg": _("Unable to create library - missing required field '{field}'".format(field=error.message))
+        })
+    except InvalidKeyError as error:
+        log.exception("Unable to create library - invalid key.")
+        return JsonResponseBadRequest({
+            "ErrMsg": _("Unable to create library '{name}'.\n\n{err}").format(name=display_name, err=error.message)}
+        )
     except DuplicateCourseError:
-        err_msg = ugettext_noop("Unable to create library - one already exists with that key.")
-        log.exception(err_msg)
-        return JsonResponseBadRequest({"ErrMsg": _(err_msg)})
+        log.exception("Unable to create library - one already exists with the same key.")
+        return JsonResponseBadRequest({
+            'ErrMsg': _(
+                'There is already a library defined with the same '
+                'organization and library code. Please '
+                'change either organization or library code to be unique.'
+            )
+        })
 
     lib_key_str = unicode(new_lib.location.library_key)
     return JsonResponse({
