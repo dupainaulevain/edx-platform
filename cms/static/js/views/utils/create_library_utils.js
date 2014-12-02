@@ -11,26 +11,15 @@ define(["jquery", "underscore", "gettext", "js/views/utils/view_utils"],
             var validateRequiredField = ViewUtils.validateRequiredField;
             var validateURLItemEncoding = ViewUtils.validateURLItemEncoding;
 
-            // Ensure that org/librarycode < 65 chars.
+            var keyLengthViolationMessage = gettext("The combined length of the organization and library code fields cannot be more than <%=limit%> characters.");
+
+            // Ensure that org/librarycode passes validateTotalKeyLength check
             validateTotalKeyLength = function () {
-                var totalLength = _.reduce(
+                ViewUtils.checkTotalKeyLengthViolations(
+                    selectors, classes,
                     [selectors.org, selectors.number],
-                    function (sum, ele) {
-                        return sum + $(ele).val().length;
-                    }, 0
+                    keyLengthViolationMessage
                 );
-                var maxLength = 65;
-                if (totalLength > maxLength) {
-                    $(selectors.errorWrapper).addClass(classes.shown).removeClass(classes.hiding);
-                    var message_text = _.template(
-                        gettext("The combined length of the organization and library code fields cannot be more than <%=limit%> characters."),
-                        {limit: maxLength}
-                    );
-                    $(selectors.errorMessage).html('<p>' + message_text + '</p>');
-                    $(selectors.save).addClass(classes.disabled);
-                } else {
-                    $(selectors.errorWrapper).removeClass(classes.shown).addClass(classes.hiding);
-                }
             };
 
             setNewLibraryFieldInErr = function (element, message) {

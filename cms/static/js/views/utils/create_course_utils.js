@@ -10,22 +10,15 @@ define(["jquery", "underscore", "gettext", "js/views/utils/view_utils"],
             var validateRequiredField = ViewUtils.validateRequiredField;
             var validateURLItemEncoding = ViewUtils.validateURLItemEncoding;
 
-            // Ensure that org/course_num/run < 65 chars.
+            var keyLengthViolationMessage = gettext('The combined length of the organization, course number, and course run fields cannot be more than <%=limit%> characters.');
+
+            // Ensure that org, course_num and run passes checkTotalKeyLengthViolations
             validateTotalCourseItemsLength = function () {
-                var totalLength = _.reduce(
+                ViewUtils.checkTotalKeyLengthViolations(
+                    selectors, classes,
                     [selectors.org, selectors.number, selectors.run],
-                    function (sum, ele) {
-                        return sum + $(ele).val().length;
-                    }, 0
+                    keyLengthViolationMessage
                 );
-                if (totalLength > 65) {
-                    $(selectors.errorWrapper).addClass(classes.shown).removeClass(classes.hiding);
-                    $(selectors.errorMessage).html('<p>' + gettext('The combined length of the organization, course number, and course run fields cannot be more than 65 characters.') + '</p>');
-                    $(selectors.save).addClass(classes.disabled);
-                }
-                else {
-                    $(selectors.errorWrapper).removeClass(classes.shown).addClass(classes.hiding);
-                }
             };
 
             setNewCourseFieldInErr = function (el, msg) {

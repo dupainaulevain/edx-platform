@@ -6,7 +6,10 @@ define(["jquery", "underscore", "gettext", "js/views/feedback_notification", "js
         var toggleExpandCollapse, showLoadingIndicator, hideLoadingIndicator, confirmThenRunOperation,
             runOperationShowingMessage, disableElementWhileRunning, getScrollOffset, setScrollOffset,
             setScrollTop, redirect, reload, hasChangedAttributes, deleteNotificationHandler,
-            validateRequiredField=1, validateURLItemEncoding=2;
+            validateRequiredField, validateURLItemEncoding, validateTotalKeyLength, checkTotalKeyLengthViolations;
+
+        // see https://openedx.atlassian.net/browse/TNL-889 for what is it and why it's 65
+        var MAX_SUM_KEY_LENGTH = 65;
 
         /**
          * Toggles the expanded state of the current element.
@@ -203,6 +206,26 @@ define(["jquery", "underscore", "gettext", "js/views/feedback_notification", "js
             return '';
         };
 
+        // Ensure that sum length of key field values <= ${MAX_SUM_KEY_LENGTH} chars.
+        validateTotalKeyLength = function (key_field_selectors) {
+            var totalLength = _.reduce(
+                key_field_selectors,
+                function (sum, ele) { return sum + $(ele).val().length;},
+                0
+            );
+            return totalLength <= MAX_SUM_KEY_LENGTH;
+        };
+
+        checkTotalKeyLengthViolations = function(selectors, classes, key_field_selectors, message_tpl) {
+            if (!validateTotalKeyLength(key_field_selectors)) {
+                $(selectors.errorWrapper).addClass(classes.shown).removeClass(classes.hiding);
+                $(selectors.errorMessage).html('<p>' + _.template(message_tpl, {limit: MAX_SUM_KEY_LENGTH}) + '</p>');
+                $(selectors.save).addClass(classes.disabled);
+            } else {
+                $(selectors.errorWrapper).removeClass(classes.shown).addClass(classes.hiding);
+            }
+        };
+
         return {
             'toggleExpandCollapse': toggleExpandCollapse,
             'showLoadingIndicator': showLoadingIndicator,
@@ -218,6 +241,8 @@ define(["jquery", "underscore", "gettext", "js/views/feedback_notification", "js
             'reload': reload,
             'hasChangedAttributes': hasChangedAttributes,
             'validateRequiredField': validateRequiredField,
-            'validateURLItemEncoding': validateURLItemEncoding
+            'validateURLItemEncoding': validateURLItemEncoding,
+            'validateTotalKeyLength': validateTotalKeyLength,
+            'checkTotalKeyLengthViolations': checkTotalKeyLengthViolations
         };
     });
