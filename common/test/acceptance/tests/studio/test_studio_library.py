@@ -21,14 +21,29 @@ class LibraryEditPageTest(StudioLibraryTest):
 
     def test_page_header(self):
         """
-        Check that the library's name is displayed in the header and title.
+        Scenario: Ensure that the library's name is displayed in the header and title.
+        Given I have a library in Studio
+        And I navigate to Library Page in Studio
+        Then I can see library name in page header title
+        And I can see library name in browser page title
         """
         self.assertIn(self.library_info['display_name'], self.lib_page.get_header_title())
         self.assertIn(self.library_info['display_name'], self.browser.title)
 
     def test_add_duplicate_delete_actions(self):
         """
-        Test that we can add an HTML block, duplicate it, then delete the original.
+        Scenario: Ensure that we can add an HTML block, duplicate it, then delete the original.
+        Given I have a library in Studio with no XBlocks
+        And I navigate to Library Page in Studio
+        Then there are no XBlocks displayed
+        When I add Text XBlock
+        Then one XBlock is displayed
+        When I duplicate first XBlock
+        Then two XBlocks are displayed
+        And those XBlocks locators' are different
+        When I delete first XBlock
+        Then one XBlocks is displayed
+        And displayed XBlock are second one
         """
         self.assertEqual(len(self.lib_page.xblocks), 0)
 
@@ -50,7 +65,18 @@ class LibraryEditPageTest(StudioLibraryTest):
 
     def test_add_edit_xblock(self):
         """
-        Test that we can add an XBlock, edit it, then see the resulting changes.
+        Scenario: Ensure that we can add an XBlock, edit it, then see the resulting changes.
+        Given I have a library in Studio with no XBlocks
+        And I navigate to Library Page in Studio
+        Then there are no XBlocks displayed
+        When I add Multiple Choice XBlock
+        Then one XBlock is displayed
+        When I edit first XBlock
+        And I go to basic tab
+        And set it's text to a fairy trivial question about Battlestar Galactica
+        And save XBlock
+        Then one XBlock is displayed
+        And first XBlock student content contains at least part of text I set
         """
         self.assertEqual(len(self.lib_page.xblocks), 0)
         # Create a new problem block:
