@@ -14,7 +14,7 @@ from django.http import HttpResponseNotAllowed, Http404
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
-from django.utils.translation import ugettext as _, ugettext_noop
+from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods
 from django_future.csrf import ensure_csrf_cookie
 from edxmako.shortcuts import render_to_response
