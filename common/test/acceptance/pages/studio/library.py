@@ -11,7 +11,7 @@ from . import BASE_URL
 
 class LibraryPage(PageObject):
     """
-    Container page in Studio
+    Library page in Studio
     """
 
     def __init__(self, browser, locator):
@@ -21,7 +21,7 @@ class LibraryPage(PageObject):
     @property
     def url(self):
         """
-        URL to the library edit page page for the given library.
+        URL to the library edit page for the given library.
         """
         return "{}/library/{}".format(BASE_URL, unicode(self.locator))
 
@@ -49,30 +49,6 @@ class LibraryPage(PageObject):
         self.wait_for_ajax()
         self.wait_for_element_invisibility('.ui-loading', 'Wait for the page to complete its initial loading of XBlocks via AJAX')
         disable_animations(self)
-
-    def click_add_button(self, item_type, specific_type=None):
-        """
-        Click one of the "Add New Component" buttons.
-
-        item_type should be "advanced", "html", "problem", or "video"
-
-        specific_type is required for some types and should be something like
-        "Blank Common Problem".
-        """
-        btn = self.q(css='.add-xblock-component .add-xblock-component-button[data-type={}]'.format(item_type))  # .first because sometimes there are two "Add New Component" blocks
-        multiple_templates = btn.filter(lambda el: 'multiple-templates' in el.get_attribute('class')).present
-        btn.click()
-        if multiple_templates:
-            sub_template_menu_div_selector = '.new-component-{}'.format(item_type)
-            self.wait_for_element_visibility(sub_template_menu_div_selector, 'Wait for the templates sub-menu to appear')
-            self.wait_for_element_invisibility('.add-xblock-component .new-component', 'Wait for the add component menu to disappear')
-            #self.wait_for(lambda: 'overflow' not in self.q(css=sub_template_menu_div_selector).attrs("style"), 'Wait for the templates sub-menu animation to finish')
-
-            all_options = self.q(css='.new-component-{} ul.new-component-template li a span'.format(item_type))
-            chosen_option = all_options.filter(lambda el: el.text == specific_type).first
-            chosen_option.click()
-        wait_for_notification(self)
-        self.wait_for_ajax()
 
     @property
     def xblocks(self):

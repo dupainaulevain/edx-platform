@@ -3,6 +3,7 @@ Acceptance tests for Content Libraries in Studio
 """
 
 from .base_studio_test import StudioLibraryTest
+from ...pages.studio.utils import add_component
 from ...pages.studio.library import LibraryPage
 
 
@@ -48,7 +49,7 @@ class LibraryEditPageTest(StudioLibraryTest):
         self.assertEqual(len(self.lib_page.xblocks), 0)
 
         # Create a new block:
-        self.lib_page.click_add_button("html", "Text")
+        add_component(self.lib_page, "html", "Text")
         self.assertEqual(len(self.lib_page.xblocks), 1)
         first_block_id = self.lib_page.xblocks[0].locator
 
@@ -80,7 +81,7 @@ class LibraryEditPageTest(StudioLibraryTest):
         """
         self.assertEqual(len(self.lib_page.xblocks), 0)
         # Create a new problem block:
-        self.lib_page.click_add_button("problem", "Multiple Choice")
+        add_component(self.lib_page, "problem", "Multiple Choice")
         self.assertEqual(len(self.lib_page.xblocks), 1)
         problem_block = self.lib_page.xblocks[0]
         # Edit it:
