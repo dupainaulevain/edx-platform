@@ -16,6 +16,7 @@ import pymongo
 import sys
 import logging
 import copy
+import hashlib
 import re
 from uuid import uuid4
 
@@ -458,6 +459,7 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase, Mongo
                  i18n_service=None,
                  fs_service=None,
                  retry_wait_time=0.1,
+                 library_tools=None,
                  **kwargs):
         """
         :param doc_store_config: must have a host, db, and collection entries. Other common entries: port, tz_aware.
@@ -510,6 +512,7 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase, Mongo
         self.render_template = render_template
         self.i18n_service = i18n_service
         self.fs_service = fs_service
+        self.library_tools = library_tools
 
         self._course_run_cache = {}
 
@@ -783,6 +786,9 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase, Mongo
 
         if self.fs_service:
             services["fs"] = self.fs_service
+
+        if self.library_tools:
+            services['library_tools'] = self.library_tools
 
         system = CachingDescriptorSystem(
             modulestore=self,
@@ -1722,3 +1728,56 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase, Mongo
 
         # To allow prioritizing draft vs published material
         self.collection.create_index('_id.revision')
+
+    def update_from_split(self, source_blocks, dest_usage, user_id):
+        """
+        Given a list of blocks from split mongo, make them all children of
+        dest_block, in a similar manner to split's copy_from_template()
+
+        :param source_blocks: an iterable of descriptors
+
+        :param dest_usage: The usage key of the block that will become the
+        parent of a copy of all the xblocks passed in `source_blocks`.
+
+        :param user_id: The user who will get credit for making this change.
+        """
+        dest_block = self.get_item(dest_usage, depth=None)
+
+        new_children = []
+
+        for block in source_blocks:
+            # Compute a new block ID. This new block ID must be consistent when this
+            # method is called with the same (source_key, dest_structure) pair
+            unique_string = unicode(block.location)+u"^"+unicode(dest_usage)
+            new_block_id = hashlib.sha1(unique_string.encode("utf-8")).hexdigest()[:20]
+            new_block_usage = dest_usage.course_key.make_usage_key(block.location.block_type, new_block_id)
+
+            if self.has_item(new_block_usage):
+                new_block = self.get_item(new_block_usage)
+            else:
+                new_block = self.create_xblock(
+                    runtime=None,
+                    course_key=dest_usage.course_key,
+                    block_type=block.location.block_type,
+                    block_id=new_block_id,
+                )
+
+            for field in block.fields.itervalues():
+                if field.scope not in (Scope.settings, Scope.content):
+                    continue
+                if field.is_set_on(block):
+                    field.write_to(new_block, field.read_from(block))
+                elif field.is_set_on(new_block):
+                    field.delete_from(new_block)
+
+            self.update_item(new_block, user_id, allow_not_found=True)
+
+            self.update_from_split(block.get_children(), new_block_usage, user_id)
+
+            new_children.append(new_block_usage)
+
+        dest_block.children = new_children
+        self.update_item(dest_block, user_id)
+
+        # Return usage locators for all the new children:
+        return new_children

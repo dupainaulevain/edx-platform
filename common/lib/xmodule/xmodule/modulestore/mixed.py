@@ -132,6 +132,10 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
                     for course_key, store_key in self.mappings.iteritems()
                     if store_key == key
                 ]
+            if 'mongo.DraftMongoModuleStore' in store_settings['ENGINE']:
+                # In order to access Content Libraries stored in split, old mongo needs this:
+                from xmodule.library_tools import LibraryToolsService
+                store_settings['OPTIONS']['library_tools'] = LibraryToolsService(self)
             store = create_modulestore_instance(
                 store_settings['ENGINE'],
                 self.contentstore,
@@ -681,8 +685,25 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
         """
         See :py:meth `SplitMongoModuleStore.copy_from_template`
         """
-        store = self._verify_modulestore_support(dest_key.course_key, 'copy_from_template')
-        return store.copy_from_template(source_keys, dest_key, user_id)
+        try:
+            dest_store = self._verify_modulestore_support(dest_key.course_key, 'copy_from_template')
+            return dest_store.copy_from_template(source_keys, dest_key, user_id)
+        except NotImplementedError:
+            # Old mongo does not support copy_from_template, nor can it read data
+            # out of libraries. So we read the data out of the library on its behalf
+            # using get_item and pass it in:
+            dest_store = self._get_modulestore_for_courseid(dest_key.course_key)
+            if hasattr(dest_store, "update_from_split"):
+                def source_blocks():
+                    """
+                    Generator loading blocks from split one at a time
+                    (we don't want to load hundreds of blocks + children into a list)
+                    """
+                    for key in source_keys:
+                        yield self.get_item(key, depth=None)
+                return dest_store.update_from_split(source_blocks(), dest_key, user_id)
+            else:
+                raise
 
     @strip_key
     def update_item(self, xblock, user_id, allow_not_found=False, **kwargs):
