@@ -350,6 +350,14 @@ class InlineDiscussionTestMixin(BaseDiscussionMixin):
         self.courseware_page.visit()
         self.check_anonymous_to_peers(True)
 
+    def test_default_topic(self):
+        thread = Thread(id=uuid4().hex, commentable_id=self.discussion_id, user_id=self.user_id)
+        thread_fixture = SingleThreadViewFixture(thread)
+        thread_fixture.push()
+        self.setup_thread_page(thread.get("id"))
+        self.thread_page.update_thread()
+        self.assertFalse(self.thread_page.has_error())
+
     def test_anonymous_to_peers_threads_as_peer(self):
         self.check_anonymous_to_peers(False)
 

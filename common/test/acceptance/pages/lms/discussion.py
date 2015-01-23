@@ -331,6 +331,15 @@ class InlineDiscussionThreadPage(DiscussionThreadPage):
     def is_thread_anonymous(self):
         return not self.q(css=".posted-details > .username").present
 
+    def update_thread(self):
+        """Performs a null thread update."""
+        self.q(css=".more-wrapper").click()
+        self.q(css=".action-edit").click()
+        self.q(css="#edit-post-submit").click()
+
+    def has_error(self):
+        return self.q(css="ul.post-errors").visible
+
 
 class DiscussionUserProfilePage(CoursePage):
 
