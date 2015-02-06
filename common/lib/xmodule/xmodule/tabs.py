@@ -5,6 +5,8 @@ Implement CourseTab
 from abc import ABCMeta
 import logging
 
+from django.conf import settings
+
 from xblock.fields import List
 from openedx.core.lib.api.plugins import PluginError
 
@@ -223,6 +225,31 @@ class CourseTab(object):
         return tab_type(tab_dict=tab_dict)
 
 
+class DynamicXBlockTabMixin(object):
+    """
+    Mixin for tabs that appear if specific Xblock is enabled in advanced modules.
+    """
+    target_xblock = None
+    is_hideable = True
+
+    @classmethod
+    def xblock_enabled(cls, course):
+        return cls.target_xblock in course.advanced_modules
+
+    def is_enabled(self, course, user=None):  # pylint: disable=unused-argument
+        return self.xblock_enabled(course) and super(DynamicXBlockTabMixin, self).is_enabled(course, user)
+
+
+class FeatureFlagTabMixin(object):
+    """
+    Mixin for tabs that appear if certain feature flag is enabled in Django settings.
+    """
+    feature_flag = None
+
+    def is_enabled(self, course, user=None):  # pylint: disable=unused-argument
+        return settings.FEATURES.get(self.feature_flag) and super(FeatureFlagTabMixin, self).is_enabled(course, user)
+
+
 class StaticTab(CourseTab):
     """
     A custom tab.
@@ -329,6 +356,7 @@ class CourseTabList(List):
             discussion_tab,
             CourseTab.load('wiki'),
             CourseTab.load('progress'),
+            CourseTab.load('discussion-xblock'),
         ])
 
     @staticmethod
@@ -346,7 +374,7 @@ class CourseTabList(List):
 
         # find one of the discussion tab types in the course tabs
         for tab in course.tabs:
-            if tab.type == 'discussion' or tab.type == 'external_discussion':
+            if tab.type == 'discussion' or tab.type == 'external_discussion' or tab.type == 'discussion-xblock':
                 return tab
         return None
 

@@ -738,3 +738,9 @@ if settings.FEATURES.get('ENABLE_NOTIFICATIONS'):
     urlpatterns += (
         url(r'^api/', include('edx_notifications.server.api.urls')),
     )
+
+# xblocks tab
+urlpatterns += (
+    url(r'^courses/{}/tab/(?P<block_type>[^/]+)'.format(settings.COURSE_ID_PATTERN),
+        'lms_xblock.views.xblock_tab_view', name="xblock_tab"),
+)

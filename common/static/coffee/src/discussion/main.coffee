@@ -1,6 +1,6 @@
 if Backbone?
   @DiscussionApp =
-    start: (elem)->
+    start: (elem, root_tpl="/courses/##COURSE_ID##/discussion/forum/")->
       # TODO: Perhaps eliminate usage of global variables when possible
       DiscussionUtil.loadRolesFromContainer()
       element = $(elem)
@@ -16,11 +16,12 @@ if Backbone?
       Content.loadContentInfos(content_info)
       discussion = new Discussion(threads, {pages: thread_pages, sort: sort_preference})
       course_settings = new DiscussionCourseSettings(element.data("course-settings"))
+      root = root_tpl.replace("##COURSE_ID##", $$course_id)
       if Backbone.History.started
         DiscussionUtil.route_prefix = DiscussionUtil.getHistoryPath(window.location.pathname, Backbone.history.root)
       new DiscussionRouter({discussion: discussion, course_settings: course_settings})
       if !Backbone.History.started
-        Backbone.history.start({pushState: true, root: "/courses/#{$$course_id}/discussion/forum/"})
+        Backbone.history.start({pushState: true, root: root})
       else
         Backbone.history.loadUrl(window.location.pathname)
   @DiscussionProfileApp =
