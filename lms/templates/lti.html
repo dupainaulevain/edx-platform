@@ -43,6 +43,9 @@
             class="ltiLaunchFrame"
             name="ltiFrame-${element_id}"
             src="${form_url}"
+            % if display_height:
+                height="${display_height}"
+            % endif
         ></iframe>
     % endif
 % elif not hide_launch:

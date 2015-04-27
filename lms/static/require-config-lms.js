@@ -49,6 +49,7 @@
             "backbone": "js/vendor/backbone-min",
             "backbone-super": "js/vendor/backbone-super",
             "underscore.string": "js/vendor/underscore.string.min",
+            "iframe-resizer": "js/vendor/iframeResizer.min",
             // Files needed by OVA
             "annotator": "js/vendor/ova/annotator-full",
             "annotator-harvardx": "js/vendor/ova/annotator-full-firebase-auth",

@@ -72,7 +72,7 @@ from xmodule.x_module import XModule, module_attr
 from xmodule.lti_2_util import LTI20ModuleMixin, LTIError
 from pkg_resources import resource_string
 from xblock.core import String, Scope, List, XBlock
-from xblock.fields import Boolean, Float
+from xblock.fields import Boolean, Float, Integer
 
 log = logging.getLogger(__name__)
 
@@ -247,6 +247,13 @@ class LTIFields(object):
         display_name=_("Accept grades past deadline"),
         help=_("Select True to allow third party systems to post grades past the deadline."),
         default=True,
+        scope=Scope.settings
+    )
+
+    display_height = Integer(
+        display_name=_("Display Height"),
+        help=_("Pixel height of the tool. Use this if dynamic resizing is not working or available."),
+        default=None,
         scope=Scope.settings
     )
 

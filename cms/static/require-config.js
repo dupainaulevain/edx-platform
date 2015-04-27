@@ -43,6 +43,7 @@ require.config({
         "URI": "js/vendor/URI.min",
         "ieshim": "js/src/ie_shim",
         "tooltip_manager": "js/src/tooltip_manager",
+        "iframe-resizer": "js/vendor/iframeResizer.min",
 
         // Files needed for Annotations feature
         "annotator": "js/vendor/ova/annotator-full",
