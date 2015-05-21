@@ -22,9 +22,11 @@ from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from certificates.api import get_certificate_url
 from certificates.tests.factories import (
     CertificateHtmlViewConfigurationFactory,
-    LinkedInAddToProfileConfigurationFactory
+    LinkedInAddToProfileConfigurationFactory,
+    BadgeAssertionFactory,
 )
 from certificates.models import ExampleCertificateSet, ExampleCertificate, GeneratedCertificate, BadgeAssertion
+from lms import urls
 
 FEATURES_WITH_CERTS_ENABLED = settings.FEATURES.copy()
 FEATURES_WITH_CERTS_ENABLED['CERTIFICATES_HTML_VIEW'] = True
@@ -446,8 +448,59 @@ class CertificatesViewsTests(ModuleStoreTestCase, EventTrackingTestCase):
                     'user_id': self.user.id,
                     'issuer': 'http://www.example.com/issuer.json',
                     'enrollment_mode': 'honor',
-                },
+                }
             },
             self.get_event()
         )
 
+class TrackShareRedirectTest(ModuleStoreTestCase, EventTrackingTestCase):
+    """
+    Verifies the badge image share event is sent out.
+    """
+    def setUp(self):
+        super(TrackShareRedirectTest, self).setUp()
+        self.client = Client()
+        self.course = CourseFactory.create(
+            org='testorg', number='run1', display_name='trackable course'
+        )
+        self.assertion = BadgeAssertionFactory(
+            user=self.user, course_id=self.course.id, data={
+                'image': 'http://www.example.com/image.png',
+                'json': {'id': 'http://www.example.com/assertion.json'},
+                'issuer': 'http://www.example.com/issuer.json',
+            },
+        )
+        # Enabling the feature flag isn't enough to change the URLs-- they're already loaded by this point.
+        self.old_patterns = urls.urlpatterns
+        urls.urlpatterns += (urls.BADGE_SHARE_TRACKER_URL,)
+
+    def tearDown(self):
+        super(TrackShareRedirectTest, self).tearDown()
+        urls.urlpatterns = self.old_patterns
+
+    def test_event_sent(self):
+        test_url = '/certificates/badge_share_tracker/{}/social_network/{}/'.format(
+            unicode(self.course.id),
+            self.user.username,
+        )
+        self.recreate_tracker()
+        response = self.client.get(test_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], 'http://www.example.com/image.png')
+        assert_event_matches(
+            {
+                'name': 'edx.badges.assertion.shared',
+                'data': {
+                    'course_id': 'testorg/run1/trackable_course',
+                    'social_network': 'social_network',
+                    # pylint: disable=no-member
+                    'assertion_id': self.assertion.id,
+                    'assertion_json_url': 'http://www.example.com/assertion.json',
+                    'assertion_image_url': 'http://www.example.com/image.png',
+                    'user_id': self.user.id,
+                    'issuer': 'http://www.example.com/issuer.json',
+                    'enrollment_mode': 'honor',
+                },
+            },
+            self.get_event()
+        )

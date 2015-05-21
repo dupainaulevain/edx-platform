@@ -7,6 +7,7 @@ from django.db.models.fields.files import ImageFieldFile
 from lazy.lazy import lazy
 from mock import patch, Mock, call
 from certificates.models import BadgeAssertion, BadgeImageConfiguration
+from openedx.core.lib.tests.assertions.events import assert_event_matches
 from track.tests import EventTrackingTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
 from certificates.badge_handler import BadgeHandler
@@ -111,6 +112,8 @@ class BadgeHandlerTestCase(ModuleStoreTestCase, EventTrackingTestCase):
                 'slug': 'edxcourse_testtest_run_honor_fc5519b',
                 'criteria': 'https://edx.org/courses/edX/course_test/test_run/about',
                 'description': 'Completed the course "Badged" (honor, 2015-05-19 - 2015-05-20)',
+                'criteria': 'https://edx.org/courses/edX/course_test/test_run/about?mode=honor&badge_referred=True',
+                'description': '2015-05-19 to 2015-05-20'
             }
         )
 
@@ -181,3 +184,19 @@ class BadgeHandlerTestCase(ModuleStoreTestCase, EventTrackingTestCase):
         badge = BadgeAssertion.objects.get(user=self.user, course_id=self.course.location.course_key)
         self.assertEqual(badge.data, result)
         self.assertEqual(badge.image_url, 'http://www.example.com/example.png')
+        self.assertEqual(kwargs['data'], {'email': 'example@example.com'})
+        assertion = BadgeAssertion.objects.get(user=self.user, course_id=self.course.location.course_key)
+        self.assertEqual(assertion.data, result)
+        self.assertEqual(assertion.image_url, 'http://www.example.com/example.png')
+        assert_event_matches({
+            'name': 'edx.badges.assertion.created',
+            'data': {
+                'user_id': self.user.id,
+                'course_id': unicode(self.course.location.course_key),
+                'enrollment_mode': 'honor',
+                'assertion_id': assertion.id,
+                'assertion_image_url': 'http://www.example.com/example.png',
+                'assertion_json_url': 'http://www.example.com/example',
+                'issuer': 'https://example.com/v1/issuer/issuers/test-issuer',
+            }
+        }, self.get_event())
