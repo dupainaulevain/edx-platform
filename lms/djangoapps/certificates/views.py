@@ -1,12 +1,12 @@
 """URL handlers related to certificate handling by LMS"""
 from datetime import datetime
 from uuid import uuid4
+from eventtracking import tracker
 import dogstats_wrapper as dog_stats_api
 import json
 import logging
 
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse, Http404, HttpResponseForbidden
 from django.utils.translation import ugettext as _
@@ -517,6 +517,28 @@ def render_html_view(request, user_id, course_id):
     # For any other expected exceptions, kick the user back to the "Invalid" screen
     except (InvalidKeyError, CourseDoesNotExist, User.DoesNotExist):
         return render_to_response(invalid_template_path, context)
+
+    if 'evidence_visit' in request.GET:
+        try:
+            badge = BadgeAssertion.objects.get(user=user, course_id=course_key)
+            tracker.emit(
+                'edx.badges.assertion.evidence_visit',
+                {
+                    'user_id': user.id,
+                    'course_id': unicode(course_key),
+                    'enrollment_mode': badge.mode,
+                    'assertion_id': badge.id,
+                    'assertion_image_url': badge.data['image'],
+                    'assertion_json_url': badge.data['json']['id'],
+                    'issuer': badge.data['issuer'],
+                }
+            )
+        except BadgeAssertion.DoesNotExist:
+            logger.warn(
+                "Could not find badge for %s on course %s.",
+                user.id,
+                course_key,
+            )
 
     # Okay, now we have all of the pieces, time to put everything together
 
