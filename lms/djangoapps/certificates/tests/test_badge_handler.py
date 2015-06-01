@@ -112,8 +112,6 @@ class BadgeHandlerTestCase(ModuleStoreTestCase, EventTrackingTestCase):
                 'slug': 'edxcourse_testtest_run_honor_fc5519b',
                 'criteria': 'https://edx.org/courses/edX/course_test/test_run/about',
                 'description': 'Completed the course "Badged" (honor, 2015-05-19 - 2015-05-20)',
-                'criteria': 'https://edx.org/courses/edX/course_test/test_run/about?mode=honor&badge_referred=True',
-                'description': '2015-05-19 to 2015-05-20'
             }
         )
 
@@ -181,10 +179,6 @@ class BadgeHandlerTestCase(ModuleStoreTestCase, EventTrackingTestCase):
             'email': 'example@example.com',
             'evidence': 'https://edx.org/certificates/user/2/course/edX/course_test/test_run?evidence_visit=1'
         })
-        badge = BadgeAssertion.objects.get(user=self.user, course_id=self.course.location.course_key)
-        self.assertEqual(badge.data, result)
-        self.assertEqual(badge.image_url, 'http://www.example.com/example.png')
-        self.assertEqual(kwargs['data'], {'email': 'example@example.com'})
         assertion = BadgeAssertion.objects.get(user=self.user, course_id=self.course.location.course_key)
         self.assertEqual(assertion.data, result)
         self.assertEqual(assertion.image_url, 'http://www.example.com/example.png')
