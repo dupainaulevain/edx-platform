@@ -106,7 +106,7 @@ def setup_masquerade(request, course_key, staff_access=False, reset_masquerade_d
     request.user.masquerade_settings = masquerade_settings
     course_masquerade = masquerade_settings.get(course_key, None)
     masquerade_user = None
-    if course_masquerade and course_masquerade.user_name:
+    if course_masquerade and getattr(course_masquerade, 'user_name', None):
         try:
             masquerade_user = CourseEnrollment.objects.users_enrolled_in(course_key).get(
                 username=course_masquerade.user_name
@@ -154,7 +154,7 @@ def is_masquerading_as_specific_student(user, course_key):  # pylint: disable=in
     Returns whether the user is a staff member masquerading as a specific student.
     """
     course_masquerade = get_course_masquerade(user, course_key)
-    return bool(course_masquerade and course_masquerade.user_name)
+    return bool(course_masquerade and getattr(course_masquerade, 'user_name', None))
 
 
 def get_masquerading_group_info(user, course_key):
