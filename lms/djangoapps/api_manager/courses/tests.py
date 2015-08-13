@@ -2253,19 +2253,19 @@ class CoursesApiTests(ModuleStoreTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['users_not_started']), 3)
         total_not_started = sum([not_started[1] for not_started in response.data['users_not_started']])
-        self.assertEqual(total_not_started, 7)  # I think this is wrong...
+        self.assertEqual(total_not_started, 6)  # I think this is wrong...
         self.assertEqual(len(response.data['users_started']), 3)
         total_started = sum([started[1] for started in response.data['users_started']])
-        self.assertEqual(total_started, 16)
+        self.assertEqual(total_started, 17)
         self.assertEqual(len(response.data['users_completed']), 3)
         total_completed = sum([completed[1] for completed in response.data['users_completed']])
         self.assertEqual(total_completed, 2)
         self.assertEqual(len(response.data['modules_completed']), 3)
         total_modules_completed = sum([completed[1] for completed in response.data['modules_completed']])
-        self.assertEqual(total_modules_completed, 23)
+        self.assertEqual(total_modules_completed, 24)
         self.assertEqual(len(response.data['active_users']), 3)
         total_active = sum([active[1] for active in response.data['active_users']])
-        self.assertEqual(total_active, 21)  # Three weeks x one user per day
+        self.assertEqual(total_active, 22)  # Three weeks x one user per day
         self.assertEqual(len(response.data['users_enrolled']), 3)
         self.assertEqual(response.data['users_enrolled'][0][1], 0)
         total_enrolled = sum([enrolled[1] for enrolled in response.data['users_enrolled']])
@@ -2284,7 +2284,7 @@ class CoursesApiTests(ModuleStoreTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['users_not_started']), 5)
         total_not_started = sum([not_started[1] for not_started in response.data['users_not_started']])
-        self.assertEqual(total_not_started, 11)  # I think this is wrong, too...
+        self.assertEqual(total_not_started, 12)  # I think this is wrong, too...
         self.assertEqual(len(response.data['users_started']), 5)
         total_started = sum([started[1] for started in response.data['users_started']])
         self.assertEqual(total_started, 25)  # All users have started
