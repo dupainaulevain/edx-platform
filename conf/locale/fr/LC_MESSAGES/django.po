@@ -13711,7 +13711,7 @@ msgid ""
 " account. Click on the link below or copy and paste it into your browser's "
 "address bar."
 msgstr ""
-"Pour commencer, activer votre compte  {platform_name} en cliquant sur le "
+"Pour commencer, activez votre compte {platform_name} en cliquant sur le "
 "lien ci-dessous ou copier coller le lien dans la barre d'adresse de votre "
 "navigateur."
 
@@ -21051,3 +21051,15 @@ msgid ""
 msgstr ""
 "Une nouvelle révision a été créée : Fusion entre la révision #%(r1)d et la "
 "révision #%(r2)d"
+
+#: lms/templates/courseware/courses.html
+msgid "Explore courses from {platform_name}."
+msgstr "Explorer les cours {platform_name}."
+
+#: lms/templates/dashboard.html
+msgid "Want to change your account settings?"
+msgstr "Vous voulez changer vos paramètres ?"
+
+#: lms/templates/dashboard.html
+msgid "Click the arrow next to your username above."
+msgstr "Cliquez sur la flèche à côté de votre nom de compte."
