@@ -41,12 +41,6 @@ class AccessTokenExchangeForm(ScopeMixin, OAuthForm):
             )
         return field_val
 
-    def clean_access_token(self):
-        """
-        Validates and returns the "access_token" field.
-        """
-        return self._require_oauth_field("access_token")
-
     def clean_client_id(self):
         """
         Validates and returns the "client_id" field.
@@ -90,10 +84,16 @@ class AccessTokenExchangeForm(ScopeMixin, OAuthForm):
         self.cleaned_data["client"] = client
 
         user = None
+        access_token = self.cleaned_data.get("access_token")
+        # TODO: Require access_token in POST OR "code" and "state" in query params
         try:
-            user = backend.do_auth(self.cleaned_data.get("access_token"), allow_inactive_user=True)
-        except (HTTPError, AuthException):
-            pass
+            if access_token:
+                user = backend.do_auth(self.cleaned_data.get("access_token"), allow_inactive_user=True)
+            else:
+                # No access token yet - only an authorization Code
+                user = backend.auth_complete(allow_inactive_user=True)
+        except AuthException as exc:
+            raise OAuthValidationError({"details": "{}".format(exc)})
         if user and isinstance(user, User):
             self.cleaned_data["user"] = user
         else:

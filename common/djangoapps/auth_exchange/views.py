@@ -146,7 +146,7 @@ class DOTAccessTokenExchangeView(AccessTokenExchangeBase, DOTAccessTokenView):
 
 class LoginWithAccessTokenView(APIView):
     """
-    View for exchanging an access token for session cookies
+    View for exchanging an access token (or authorization code) for session cookies
     """
     authentication_classes = (OAuth2AuthenticationAllowInactiveUser,)
     permission_classes = (permissions.IsAuthenticated,)
