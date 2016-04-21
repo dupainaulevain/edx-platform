@@ -21,6 +21,7 @@ class AccessTokenExchangeForm(ScopeMixin, OAuthForm):
     access_token = CharField(required=False)
     scope = ScopeChoiceField(choices=SCOPE_NAMES, required=False)
     client_id = CharField(required=False)
+    id_token = CharField(required=False)  # Additional data field required for somem providers like Azure AD
 
     def __init__(self, request, oauth2_adapter, *args, **kwargs):
         super(AccessTokenExchangeForm, self).__init__(*args, **kwargs)
@@ -89,9 +90,13 @@ class AccessTokenExchangeForm(ScopeMixin, OAuthForm):
             )
         self.cleaned_data["client"] = client
 
+        extra_data = {}
+        if self.cleaned_data.get("id_token"):
+            extra_data["id_token"] = self.cleaned_data["id_token"]
+
         user = None
         try:
-            user = backend.do_auth(self.cleaned_data.get("access_token"), allow_inactive_user=True)
+            user = backend.do_auth(self.cleaned_data.get("access_token"), allow_inactive_user=True, response=extra_data)
         except (HTTPError, AuthException):
             pass
         if user and isinstance(user, User):
