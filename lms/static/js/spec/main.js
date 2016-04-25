@@ -14,6 +14,7 @@
             'jquery.markitup': 'xmodule_js/common_static/js/vendor/markitup/jquery.markitup',
             'jquery.leanModal': 'xmodule_js/common_static/js/vendor/jquery.leanModal',
             'jquery.ajaxQueue': 'xmodule_js/common_static/js/vendor/jquery.ajaxQueue',
+            'jquery.ajax-retry':'js/vendor/jquery.ajax-retry',
             'jquery.smoothScroll': 'xmodule_js/common_static/js/vendor/jquery.smooth-scroll.min',
             'jquery.scrollTo': 'xmodule_js/common_static/js/vendor/jquery.scrollTo-1.4.2-min',
             'jquery.timepicker': 'xmodule_js/common_static/js/vendor/timepicker/jquery.timepicker',
@@ -72,6 +73,7 @@
 
             // Manually specify LMS files that are not converted to RequireJS
             'history': 'js/vendor/history',
+            'js/commerce/views/receipt_view': 'js/commerce/views/receipt_view',
             'js/staff_debug_actions': 'js/staff_debug_actions',
             'js/vendor/jquery.qubit': 'js/vendor/jquery.qubit',
             'js/utils/navigation': 'js/utils/navigation',
@@ -313,6 +315,10 @@
             'js/ccx/schedule': {
                 exports: 'js/ccx/schedule',
                 deps: ['jquery', 'underscore', 'backbone', 'gettext', 'moment']
+            },
+            'js/commerce/views/receipt_view': {
+                exports: 'edx.commerce.ReceiptView',
+                deps: ['jquery', 'backbone', 'underscore', 'string_utils']
             },
 
             // Backbone classes loaded explicitly until they are converted to use RequireJS
@@ -762,6 +768,7 @@
         'js/spec/learner_dashboard/program_card_view_spec.js',
         'js/spec/learner_dashboard/certificate_view_spec.js',
         'js/spec/api_admin/catalog_preview_spec.js',
+        'js/spec/commerce/receipt_spec.js'
     ];
 
     for (var i = 0; i < testFiles.length; i++) {
