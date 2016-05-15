@@ -22,21 +22,44 @@ var edx = edx || {};
             this.render();
         },
 
+        /**
+         * @param product
+         * @returns {bool} True if product requires user to be verified by Software Secure.
+         */
+        requiresVerification: function(product){
+            function getAttribute(attribute, default_value){
+                var attr = _.findWhere(product.attribute_values, {name: attribute});
+                if (!attr){
+                    return default_value;
+                }
+                return attr.value;
+            }
+
+            return getAttribute("id_verification_required", true);
+        },
+
         renderReceipt: function (data) {
             var templateHtml = $("#receipt-tpl").html(),
                 context = {
-                    platformName: this.$el.data('platform-name'),
-                    verified: this.$el.data('verified').toLowerCase() === 'true',
-                    is_request_in_themed_site: this.$el.data('is-request-in-themed-site').toLowerCase() === 'true'
+                    platformName: this.$el.data('platform-name')
                 },
-                providerId;
+                providerId,
+                is_request_in_themed_site = this.$el.data('is-request-in-themed-site').toLowerCase() === 'true',
+                user_already_verified = this.$el.data('verified').toLowerCase() === 'true',
+                course_requires_verification;
+
+            // True if any of the courses bought requires verification
+            course_requires_verification = _.any(data.lines, function (line) {
+                return this.requiresVerification(line.product);
+            }, this);
 
             // Add the receipt info to the template context
             this.courseKey = this.getOrderCourseKey(data);
             this.username = this.$el.data('username');
             _.extend(context, {
                 receipt: this.receiptContext(data),
-                courseKey: this.courseKey
+                courseKey: this.courseKey,
+                user_pending_verification: _.any([user_already_verified, course_requires_verification, is_request_in_themed_site])
             });
 
             this.$el.html(_.template(templateHtml)(context));
