@@ -11,6 +11,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='courseoverview',
+            name='facebook_url',
+        ),
         migrations.AddField(
             model_name='courseoverview',
             name='self_paced',

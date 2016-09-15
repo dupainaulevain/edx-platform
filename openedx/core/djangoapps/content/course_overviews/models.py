@@ -67,7 +67,6 @@ class CourseOverview(TimeStampedModel):
 
     # URLs
     course_image_url = TextField()
-    facebook_url = TextField(null=True)
     social_sharing_url = TextField(null=True)
     end_of_course_survey_url = TextField(null=True)
 
