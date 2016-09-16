@@ -10,5 +10,4 @@ function DiscussionCourseBlock(runtime, element) {
     }
 
     DiscussionUtil.force_async = true;
-    DiscussionApp.start(el);
 }
