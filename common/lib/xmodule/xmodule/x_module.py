@@ -1706,6 +1706,7 @@ class DiscussionService(object):
         request = HttpRequest()
         user = self.runtime.user
         request.user = user
+        request.method = 'GET'
         user_info = cc.User.from_django_user(self.runtime.user).to_dict()
         course_id = self.runtime.course_id
         course = get_course_with_access(self.runtime.user, 'load', course_id, check_if_enrolled=True)
