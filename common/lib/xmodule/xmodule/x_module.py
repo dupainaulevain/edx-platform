@@ -1746,7 +1746,7 @@ class DiscussionService(object):
             'is_course_cohorted': is_course_cohorted(course_id),
             'has_permission_to_create_thread': has_permission(user, "create_thread", course_id),
             'has_permission_to_create_comment': has_permission(user, "create_comment", course_id),
-            'has_permission_to_create_subcomment': has_permission(user, "create_subcomment", course_id),
+            'has_permission_to_create_subcomment': has_permission(user, "create_sub_comment", course_id),
             'has_permission_to_openclose_thread': has_permission(user, "openclose_thread", course_id),
             'course_settings': saxutils.escape(json.dumps(course_settings), escapedict),
         }
@@ -1783,7 +1783,7 @@ class DiscussionService(object):
             'flag_moderator': flag_moderator,
             'has_permission_to_create_thread': has_permission(user, "create_thread", course_id),
             'has_permission_to_create_comment': has_permission(user, "create_comment", course_id),
-            'has_permission_to_create_subcomment': has_permission(user, "create_subcomment", course_id),
+            'has_permission_to_create_subcomment': has_permission(user, "create_sub_comment", course_id),
             'has_permission_to_openclose_thread': has_permission(user, "openclose_thread", course_id)
         }
 
