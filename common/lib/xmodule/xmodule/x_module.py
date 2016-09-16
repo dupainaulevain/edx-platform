@@ -1744,10 +1744,10 @@ class DiscussionService(object):
             'sort_preference': user_info['default_sort_key'],
             'cohorted_commentables': cohorted_commentables,
             'is_course_cohorted': is_course_cohorted(course_id),
-            'has_permission_to_create_thread': has_permission(user, "create_thread", course_id),
-            'has_permission_to_create_comment': has_permission(user, "create_comment", course_id),
-            'has_permission_to_create_subcomment': has_permission(user, "create_sub_comment", course_id),
-            'has_permission_to_openclose_thread': has_permission(user, "openclose_thread", course_id),
+            'can_create_thread': has_permission(user, "create_thread", course_id),
+            'can_create_comment': has_permission(user, "create_comment", course_id),
+            'can_create_subcomment': has_permission(user, "create_sub_comment", course_id),
+            'can_openclose_thread': has_permission(user, "openclose_thread", course_id),
             'course_settings': saxutils.escape(json.dumps(course_settings), escapedict),
         }
 
@@ -1781,10 +1781,10 @@ class DiscussionService(object):
             'category_map': category_map,
             'is_moderator': is_moderator,
             'flag_moderator': flag_moderator,
-            'has_permission_to_create_thread': has_permission(user, "create_thread", course_id),
-            'has_permission_to_create_comment': has_permission(user, "create_comment", course_id),
-            'has_permission_to_create_subcomment': has_permission(user, "create_sub_comment", course_id),
-            'has_permission_to_openclose_thread': has_permission(user, "openclose_thread", course_id)
+            'can_create_thread': has_permission(user, "create_thread", course_id),
+            'can_create_comment': has_permission(user, "create_comment", course_id),
+            'can_create_subcomment': has_permission(user, "create_sub_comment", course_id),
+            'can_openclose_thread': has_permission(user, "openclose_thread", course_id)
         }
 
         return context
