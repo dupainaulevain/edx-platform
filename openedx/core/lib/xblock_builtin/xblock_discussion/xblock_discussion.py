@@ -4,12 +4,18 @@ Discussion XBlock
 """
 import logging
 
+from django.templatetags.static import static
+from django.utils.translation import get_language_bidi
+
 from xblockutils.resources import ResourceLoader
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 
 from xblock.core import XBlock
 from xblock.fields import Scope, String, UNIQUE_ID
 from xblock.fragment import Fragment
+
+from openedx.core.lib.xblock_builtin.xblock_discussion.utils import get_js_dependencies
+
 
 log = logging.getLogger(__name__)
 loader = ResourceLoader(__name__)  # pylint: disable=invalid-name
@@ -81,6 +87,54 @@ class DiscussionXBlock(XBlock, StudioEditableXBlockMixin):
             return None
         return user_service._django_user  # pylint: disable=protected-access
 
+    @staticmethod
+    def vendor_js_dependencies():
+        """
+        Returns list of vendor JS files that this XBlock depends on.
+        """
+        return get_js_dependencies('discussion_vendor')
+
+    @staticmethod
+    def js_dependencies():
+        """
+        Returns list of JS files that this XBlock depends on.
+        """
+        return get_js_dependencies('discussion')
+
+    @staticmethod
+    def css_dependencies():
+        """
+        Returns list of CSS files that this XBlock depends on.
+        """
+        if get_language_bidi():
+            return ['css/inline-discussion-rtl.css']
+        else:
+            return ['css/inline-discussion.css']
+
+    def add_resource_urls(self, fragment):
+        """
+        Adds URLs for JS and CSS resources that this XBlock depends on to `fragment`.
+        """
+        # Head dependencies
+        fragment.add_resource(loader.load_unicode("static/js/edx_ui_toolkit_shim.js"), "application/javascript", "head")
+        fragment.add_resource(loader.load_unicode("static/js/i18n_shim.js"), "application/javascript", "head")
+        fragment.add_resource(loader.load_unicode("static/js/URI_shim.js"), "application/javascript", "head")
+        fragment.add_resource(loader.load_unicode("static/js/leanModal_shim.js"), "application/javascript", "head")
+
+        for vendor_js_file in self.vendor_js_dependencies():
+            fragment.add_resource_url(static(vendor_js_file), "application/javascript", "head")
+
+        for css_file in self.css_dependencies():
+            fragment.add_css_url(static(css_file))
+
+        # Body dependencies
+        fragment.add_javascript(loader.load_unicode("static/js/mathjax_include.js"))
+
+        for js_file in self.js_dependencies():
+            fragment.add_javascript_url(static(js_file))
+
+        fragment.add_javascript(loader.load_unicode("static/js/discussion_classes.js"))
+
     def has_permission(self, permission):
         """
         Encapsulates lms specific functionality, as `has_permission` is not
@@ -100,6 +154,8 @@ class DiscussionXBlock(XBlock, StudioEditableXBlockMixin):
         Renders student view for LMS.
         """
         fragment = Fragment()
+
+        self.add_resource_urls(fragment)
 
         course = self.runtime.modulestore.get_course(self.course_key)
 

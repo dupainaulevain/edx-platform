@@ -1,0 +1,46 @@
+// From lms-main-v1-rtl.scss
+
+// libs and resets *do not edit*
+@import 'bourbon/bourbon'; // lib - bourbon
+@import 'vendor/bi-app/bi-app-rtl'; // set the layout for right to left languages
+@import 'base/variables-rtl';
+
+// From lms-discussion-main.scss
+
+// Load the RTL version of the edX Pattern Library
+$pattern-library-path: '../edx-pattern-library' !default;
+@import 'edx-pattern-library/pattern-library/sass/edx-pattern-library-rtl';
+
+// From lms-main-v1-rtl.scss
+
+// base - utilities
+@import 'base/variables';
+@import 'base/mixins';
+
+// From _build-lms-v1.scss
+
+// base - elements
+@import 'elements/typography';
+
+// app - discussion
+@import "discussion/utilities/variables-v1";
+@import "discussion/utilities/v1-compatibility";
+@import "discussion/mixins";
+@import 'discussion/discussion'; // Process old file after definitions but before everything else, partial is deprecated.
+@import 'discussion/discussion-v1'; // Non-Pattern Library styling
+@import "discussion/elements/actions";
+@import "discussion/elements/editor";
+@import "discussion/elements/labels";
+@import "discussion/elements/navigation";
+@import "discussion/views/home";
+@import "discussion/views/thread";
+@import "discussion/views/create-edit-post";
+@import "discussion/views/response";
+@import 'discussion/utilities/developer';
+@import 'discussion/utilities/shame';
+
+// From _build-course.scss
+
+// discussion
+@import "course/discussion/form-wmd-toolbar";
+@import "course/discussion/form";
