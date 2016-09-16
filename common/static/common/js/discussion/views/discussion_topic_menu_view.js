@@ -42,11 +42,11 @@
                 this.selectedTopic = this.$('.js-selected-topic');
                 this.hideTopicDropdown();
                 if (this.getCurrentTopicId()) {
-                    this.setTopic(this.$('a.topic-title').filter(
+                    this.setTopic(this.$('.topic-title').filter(
                         '[data-discussion-id="' + this.getCurrentTopicId() + '"]')
                     );
                 } else {
-                    this.setTopic(this.$('a.topic-title').first());
+                    this.setTopic(this.$('button.topic-title').first());
                 }
                 return this.$el;
             },
@@ -153,7 +153,7 @@
                 if (name.length < this.maxNameWidth) {
                     return name;
                 } else {
-                    path = _.map(name.split('/'), function(item){
+                    path = _.map(name.split('/'), function(item) {
                         return item.replace(/^\s+|\s+$/g, '');
                     });
                     while (path.length > 1) {
@@ -191,12 +191,12 @@
                 $items.addClass('hidden');
                 $items.each(function(_index, item) {
                     var path, pathText, pathTitles;
-                    path = $(item).parents(".topic-menu-item").andSelf();
-                    pathTitles = path.children(".topic-title").map(function(_, elem) {
+                    path = $(item).parents('.topic-menu-item').andSelf();
+                    pathTitles = path.children('.topic-title').map(function(_, elem) {
                         return $(elem).text();
                     }).get();
-                    pathText = pathTitles.join(" / ").toLowerCase();
-                    if (query.split(" ").every(function(term) {
+                    pathText = pathTitles.join(' / ').toLowerCase();
+                    if (query.split(' ').every(function(term) {
                             return pathText.search(term.toLowerCase()) !== -1;
                         })) {
                         $(item).removeClass('hidden');

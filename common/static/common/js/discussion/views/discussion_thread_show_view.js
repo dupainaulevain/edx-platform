@@ -18,9 +18,8 @@
             return child;
         };
 
-    if (typeof Backbone !== "undefined" && Backbone !== null) {
+    if (typeof Backbone !== 'undefined' && Backbone !== null) {
         this.DiscussionThreadShowView = (function(_super) {
-
             __extends(DiscussionThreadShowView, _super);
 
             function DiscussionThreadShowView() {
@@ -30,15 +29,14 @@
             DiscussionThreadShowView.prototype.initialize = function(options) {
                 var _ref;
                 DiscussionThreadShowView.__super__.initialize.call(this);
-                this.mode = options.mode || "inline";
-                if ((_ref = this.mode) !== "tab" && _ref !== "inline") {
-                    throw new Error("invalid mode: " + this.mode);
+                this.mode = options.mode || 'inline';
+                if ((_ref = this.mode) !== 'tab' && _ref !== 'inline') {
+                    throw new Error('invalid mode: ' + this.mode);
                 }
             };
 
             DiscussionThreadShowView.prototype.renderTemplate = function() {
                 var context;
-                this.template = _.template($("#thread-show-template").html());
                 context = $.extend({
                     mode: this.mode,
                     flagged: this.model.isFlagged(),
@@ -46,17 +44,20 @@
                     cid: this.model.cid,
                     readOnly: $('.discussion-module').data('read-only')
                 }, this.model.attributes);
-                return this.template(context);
+                return edx.HtmlUtils.template($('#thread-show-template').html())(context);
             };
 
             DiscussionThreadShowView.prototype.render = function() {
-                this.$el.html(this.renderTemplate());
+                edx.HtmlUtils.setHtml(
+                    this.$el,
+                    this.renderTemplate()
+                );
                 this.delegateEvents();
                 this.renderAttrs();
-                this.$("span.timeago").timeago();
+                this.$('span.timeago').timeago();
                 this.convertMath();
-                this.highlight(this.$(".post-body"));
-                this.highlight(this.$("h1,h3"));
+                this.$('.post-body');
+                this.$('h1,h3');
                 return this;
             };
 
@@ -70,11 +71,11 @@
             };
 
             DiscussionThreadShowView.prototype.edit = function(event) {
-                return this.trigger("thread:edit", event);
+                return this.trigger('thread:edit', event);
             };
 
             DiscussionThreadShowView.prototype._delete = function(event) {
-                return this.trigger("thread:_delete", event);
+                return this.trigger('thread:_delete', event);
             };
 
             DiscussionThreadShowView.prototype.highlight = function(el) {
@@ -84,8 +85,6 @@
             };
 
             return DiscussionThreadShowView;
-
         })(DiscussionContentShowView);
     }
-
 }).call(window);
