@@ -52,12 +52,7 @@
             };
 
             ThreadResponseShowView.prototype.convertMath = function() {
-                var element;
-                element = this.$(".response-body");
-                element.html(DiscussionUtil.postMathJaxProcessor(DiscussionUtil.markdownWithHighlight(element.text())));
-                if (typeof MathJax !== "undefined" && MathJax !== null) {
-                    return MathJax.Hub.Queue(["Typeset", MathJax.Hub, element[0]]);
-                }
+                DiscussionUtil.convertMath(this.$('.response-body'));
             };
 
             ThreadResponseShowView.prototype.edit = function(event) {

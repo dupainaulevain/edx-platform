@@ -71,12 +71,7 @@
             };
 
             ResponseCommentShowView.prototype.convertMath = function() {
-                var body;
-                body = this.$el.find(".response-body");
-                body.html(DiscussionUtil.postMathJaxProcessor(DiscussionUtil.markdownWithHighlight(body.text())));
-                if (typeof MathJax !== "undefined" && MathJax !== null) {
-                    return MathJax.Hub.Queue(["Typeset", MathJax.Hub, body[0]]);
-                }
+                DiscussionUtil.convertMath(this.$el.find('.response-body'));
             };
 
             ResponseCommentShowView.prototype._delete = function(event) {
