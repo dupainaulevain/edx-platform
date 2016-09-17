@@ -166,9 +166,9 @@
                     rawName = path[0];
                     name = ellipsisText + ' / ' + rawName;
                     if (name.length > this.maxNameWidth) {
-                      concatedLength = ellipsisText.length + ' / '.length + ellipsisText.length;
-                      rawName = rawName.slice(0, this.maxNameWidth - concatedLength);
-                      name = ellipsisText + ' / ' + rawName + ' ' + ellipsisText;
+                        concatedLength = ellipsisText.length + ' / '.length + ellipsisText.length;
+                        rawName = rawName.slice(0, this.maxNameWidth - concatedLength);
+                        name = ellipsisText + ' / ' + rawName + ' ' + ellipsisText;
                     }
                 }
                 return name;
@@ -197,8 +197,8 @@
                     }).get();
                     pathText = pathTitles.join(' / ').toLowerCase();
                     if (query.split(' ').every(function(term) {
-                            return pathText.search(term.toLowerCase()) !== -1;
-                        })) {
+                        return pathText.search(term.toLowerCase()) !== -1;
+                    })) {
                         $(item).removeClass('hidden');
                         $(item).find('.topic-menu-item').removeClass('hidden');
                         $(item).parents('.topic-menu-item').removeClass('hidden');
