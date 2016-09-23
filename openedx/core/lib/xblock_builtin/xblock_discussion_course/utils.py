@@ -14,6 +14,7 @@ from path import Path as path
 JS_URLS = [
     # VENDOR
     'js/vendor/mustache.js',
+    'js/discussion_forum.js',
 ]
 
 

@@ -10,12 +10,5 @@ function DiscussionCourseBlock(runtime, element) {
 
     DiscussionUtil.force_async = true;
 
-    $(function() {
-        $("section.discussion").each(function(index, elem) {
-           DiscussionApp.start(elem);
-        });
-        $("section.discussion-user-threads").each(function(index, elem) {
-            DiscussionProfileApp.start(elem);
-        });
-    });
+    loadDiscussionApp();
 }
