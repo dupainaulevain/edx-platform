@@ -23,6 +23,7 @@ class StudioEditableBlock(object):
             if can_reorder:
                 context['reorderable_items'].add(child.location)
             context['can_add'] = can_add
+            context['can_edit_visibility'] = False
             rendered_child = child.render(StudioEditableModule.get_preview_view_name(child), context)
             fragment.add_frag_resources(rendered_child)
 
