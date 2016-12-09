@@ -121,6 +121,18 @@ class LibraryContentFields(object):
         return LibraryLocator.from_string(self.source_library_id)
 
 
+class AdaptiveLibraryContentFields(LibraryContentFields):
+    """
+    Custom field definitions for adaptive library content blocks.
+    """
+    display_name = String(
+        display_name=_("Display Name"),
+        help=_("Display name for this module"),
+        default="Adaptive Content Block",
+        scope=Scope.settings,
+    )
+
+
 #pylint: disable=abstract-method
 @XBlock.wants('library_tools')  # Only needed in studio
 class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
@@ -359,6 +371,14 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
         return list(self._get_selected_child_blocks())
 
 
+@XBlock.wants('library_tools')  # Only needed in studio
+class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentModule):
+    """
+    A specialized version of Randomized Content Block that communicates
+    with an external service to determine when to show its children, and which ones.
+    """
+
+
 @XBlock.wants('user')
 @XBlock.wants('library_tools')  # Only needed in studio
 @XBlock.wants('studio_user_permissions')  # Only available in studio
@@ -367,6 +387,7 @@ class LibraryContentDescriptor(LibraryContentFields, MakoModuleDescriptor, XmlDe
     Descriptor class for LibraryContentModule XBlock.
     """
     module_class = LibraryContentModule
+    category = 'library_content'
     mako_template = 'widgets/metadata-edit.html'
     js = {'coffee': [resource_string(__name__, 'js/src/vertical/edit.coffee')]}
     js_module_name = "VerticalDescriptor"
@@ -631,7 +652,7 @@ class LibraryContentDescriptor(LibraryContentFields, MakoModuleDescriptor, XmlDe
 
     def definition_to_xml(self, resource_fs):
         """ Exports Library Content Module to XML """
-        xml_object = etree.Element('library_content')
+        xml_object = etree.Element(self.category)
         for child in self.get_children():
             self.runtime.add_block_as_child_node(child, xml_object)
         # Set node attributes based on our fields.
@@ -641,3 +662,14 @@ class LibraryContentDescriptor(LibraryContentFields, MakoModuleDescriptor, XmlDe
             if field.is_set_on(self):
                 xml_object.set(field_name, unicode(field.read_from(self)))
         return xml_object
+
+
+@XBlock.wants('user')
+@XBlock.wants('library_tools')  # Only needed in studio
+@XBlock.wants('studio_user_permissions')  # Only available in studio
+class AdaptiveLibraryContentDescriptor(AdaptiveLibraryContentFields, LibraryContentDescriptor):
+    """
+    Descriptor class for LibraryContentModule XBlock.
+    """
+    module_class = AdaptiveLibraryContentModule
+    category = 'adaptive_library_content'

@@ -10,7 +10,9 @@ from mock import Mock, patch
 from xblock.fragment import Fragment
 from xblock.runtime import Runtime as VanillaRuntime
 
-from xmodule.library_content_module import ANY_CAPA_TYPE_VALUE, LibraryContentDescriptor
+from xmodule.library_content_module import (
+    ANY_CAPA_TYPE_VALUE, AdaptiveLibraryContentModule, LibraryContentDescriptor, LibraryContentModule,
+)
 from xmodule.library_tools import LibraryToolsService
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.tests.factories import LibraryFactory, CourseFactory
@@ -27,6 +29,14 @@ class LibraryContentTest(MixedSplitTestCase):
     """
     Base class for tests of LibraryContentModule (library_content_module.py)
     """
+    DEFAULTS = {
+        "category": "library_content",
+        "module_class": LibraryContentModule,
+        "fields": {
+            "display_name": "Randomized Content Block",
+        },
+    }
+
     def setUp(self):
         super(LibraryContentTest, self).setUp()
 
@@ -41,7 +51,7 @@ class LibraryContentTest(MixedSplitTestCase):
         self.sequential = self.make_block("sequential", self.chapter)
         self.vertical = self.make_block("vertical", self.sequential)
         self.lc_block = self.make_block(
-            "library_content",
+            self.DEFAULTS["category"],
             self.vertical,
             max_count=1,
             source_library_id=unicode(self.library.location.library_key)
@@ -67,9 +77,22 @@ class LibraryContentTest(MixedSplitTestCase):
         module.xmodule_runtime = module_system
 
 
+class AdaptiveLibraryContentTest(LibraryContentTest):
+    """
+    Base class for tests of AdaptiveLibraryContentModule (library_content_module.py)
+    """
+    DEFAULTS = {
+        "category": "adaptive_library_content",
+        "module_class": AdaptiveLibraryContentModule,
+        "fields": {
+            "display_name": "Adaptive Content Block",
+        },
+    }
+
+
 class LibraryContentModuleTestMixin(object):
     """
-    Basic unit tests for LibraryContentModule
+    Basic unit tests for LibraryContentModule and AdaptiveLibraryContentModule
     """
     problem_types = [
         ["multiplechoiceresponse"], ["optionresponse"], ["optionresponse", "coderesponse"],
@@ -96,6 +119,19 @@ class LibraryContentModuleTestMixin(object):
         for problem_type in self.problem_types:
             block = self.make_block("problem", self.library, data=self._get_capa_problem_type_xml(*problem_type))
             self.problem_type_lookup[block.location] = problem_type
+
+    def test_defaults(self):
+        """
+        Test that block defaults match expected values.
+        """
+        category = self.lc_block.category
+        self.assertEqual(category, self.DEFAULTS["category"])
+
+        module_class = self.lc_block.module_class
+        self.assertEqual(module_class, self.DEFAULTS["module_class"])
+
+        display_name = self.lc_block.fields["display_name"]
+        self.assertEqual(display_name.default, self.DEFAULTS["fields"]["display_name"])
 
     def test_lib_content_block(self):
         """
@@ -245,7 +281,16 @@ class LibraryContentModuleTestMixin(object):
 @patch('xmodule.library_tools.SearchEngine.get_search_engine', Mock(return_value=None, autospec=True))
 class TestLibraryContentModuleNoSearchIndex(LibraryContentModuleTestMixin, LibraryContentTest):
     """
-    Tests for library container when no search index is available.
+    Tests for LibraryContentModule when no search index is available.
+    Tests fallback low-level CAPA problem introspection
+    """
+    pass
+
+
+@patch('xmodule.library_tools.SearchEngine.get_search_engine', Mock(return_value=None, autospec=True))
+class TestAdaptiveLibraryContentModuleNoSearchIndex(LibraryContentModuleTestMixin, AdaptiveLibraryContentTest):
+    """
+    Tests for LibraryContentModule when no search index is available.
     Tests fallback low-level CAPA problem introspection
     """
     pass
@@ -254,10 +299,9 @@ class TestLibraryContentModuleNoSearchIndex(LibraryContentModuleTestMixin, Libra
 search_index_mock = Mock(spec=SearchEngine)  # pylint: disable=invalid-name
 
 
-@patch('xmodule.library_tools.SearchEngine.get_search_engine', Mock(return_value=search_index_mock, autospec=True))
-class TestLibraryContentModuleWithSearchIndex(LibraryContentModuleTestMixin, LibraryContentTest):
+class LibraryContentModuleWithSearchIndexMixin(LibraryContentModuleTestMixin):
     """
-    Tests for library container with mocked search engine response.
+    Mixin that makes a mocked search available to tests using it.
     """
     def _get_search_response(self, field_dictionary=None):
         """ Mocks search response as returned by search engine """
@@ -274,20 +318,33 @@ class TestLibraryContentModuleWithSearchIndex(LibraryContentModuleTestMixin, Lib
 
     def setUp(self):
         """ Sets up search engine mock """
-        super(TestLibraryContentModuleWithSearchIndex, self).setUp()
+        super(LibraryContentModuleWithSearchIndexMixin, self).setUp()
         search_index_mock.search = Mock(side_effect=self._get_search_response)
 
 
-@patch(
-    'xmodule.modulestore.split_mongo.caching_descriptor_system.CachingDescriptorSystem.render', VanillaRuntime.render
-)
-@patch('xmodule.html_module.HtmlModule.author_view', dummy_render, create=True)
-@patch('xmodule.x_module.DescriptorSystem.applicable_aside_types', lambda self, block: [])
-class TestLibraryContentRender(LibraryContentTest):
+@patch('xmodule.library_tools.SearchEngine.get_search_engine', Mock(return_value=search_index_mock, autospec=True))
+class TestLibraryContentModuleWithSearchIndex(LibraryContentModuleWithSearchIndexMixin, LibraryContentTest):
     """
-    Rendering unit tests for LibraryContentModule
+    Tests for LibraryContentModule with mocked search engine response.
     """
-    def test_preivew_view(self):
+    pass
+
+
+@patch('xmodule.library_tools.SearchEngine.get_search_engine', Mock(return_value=search_index_mock, autospec=True))
+class TestAdaptiveLibraryContentModuleWithSearchIndex(  # pylint: disable=invalid-name
+        LibraryContentModuleWithSearchIndexMixin, AdaptiveLibraryContentTest
+):
+    """
+    Tests for AdaptiveLibraryContentModule with mocked search engine response.
+    """
+    pass
+
+
+class LibraryContentRenderMixin(object):
+    """
+    Mixin for unit tests that check rendering results
+    """
+    def test_preview_view(self):
         """ Test preview view rendering """
         self.lc_block.refresh_children()
         self.lc_block = self.store.get_item(self.lc_block.location)
@@ -307,12 +364,36 @@ class TestLibraryContentRender(LibraryContentTest):
         self.assertEqual("LibraryContentAuthorView", rendered.js_init_fn)  # but some js initialization should happen
 
 
-class TestLibraryContentAnalytics(LibraryContentTest):
+@patch(
+    'xmodule.modulestore.split_mongo.caching_descriptor_system.CachingDescriptorSystem.render', VanillaRuntime.render
+)
+@patch('xmodule.html_module.HtmlModule.author_view', dummy_render, create=True)
+@patch('xmodule.x_module.DescriptorSystem.applicable_aside_types', lambda self, block: [])
+class TestLibraryContentRender(LibraryContentRenderMixin, LibraryContentTest):
     """
-    Test analytics features of LibraryContentModule
+    Rendering unit tests for LibraryContentModule
+    """
+    pass
+
+
+@patch(
+    'xmodule.modulestore.split_mongo.caching_descriptor_system.CachingDescriptorSystem.render', VanillaRuntime.render
+)
+@patch('xmodule.html_module.HtmlModule.author_view', dummy_render, create=True)
+@patch('xmodule.x_module.DescriptorSystem.applicable_aside_types', lambda self, block: [])
+class TestAdaptiveLibraryContentRender(LibraryContentRenderMixin, AdaptiveLibraryContentTest):
+    """
+    Rendering unit tests for AdaptiveLibraryContentModule
+    """
+    pass
+
+
+class LibraryContentAnalyticsMixin(object):
+    """
+    Mixin for testing analytics features of library content modules
     """
     def setUp(self):
-        super(TestLibraryContentAnalytics, self).setUp()
+        super(LibraryContentAnalyticsMixin, self).setUp()
         self.publisher = Mock()
         self.lc_block.refresh_children()
         self.lc_block = self.store.get_item(self.lc_block.location)
@@ -492,3 +573,17 @@ class TestLibraryContentAnalytics(LibraryContentTest):
             "descendants": [],
         }])
         self.assertEqual(event_data["reason"], "invalid")
+
+
+class TestLibraryContentAnalytics(LibraryContentAnalyticsMixin, LibraryContentTest):
+    """
+    Test analytics features of LibraryContentModule
+    """
+    pass
+
+
+class TestAdaptiveLibraryContentAnalytics(LibraryContentAnalyticsMixin, AdaptiveLibraryContentTest):
+    """
+    Test analytics features of AdaptiveLibraryContentModule
+    """
+    pass

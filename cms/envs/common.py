@@ -1000,6 +1000,7 @@ ADVANCED_COMPONENT_TYPES = [
     'lti',
     'lti_consumer',
     'library_content',
+    'adaptive_library_content',
     'edx_sga',
     'problem-builder',
     'pb-dashboard',

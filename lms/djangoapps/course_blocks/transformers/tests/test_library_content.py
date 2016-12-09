@@ -1,10 +1,10 @@
 """
-Tests for ContentLibraryTransformer.
+Tests for ContentLibraryTransformer and AdaptiveContentLibraryTransformer.
 """
 import mock
 from student.tests.factories import CourseEnrollmentFactory
 
-from course_blocks.transformers.library_content import ContentLibraryTransformer
+from course_blocks.transformers.library_content import ContentLibraryTransformer, AdaptiveContentLibraryTransformer
 from course_blocks.api import get_course_blocks, clear_course_from_cache
 from lms.djangoapps.course_blocks.transformers.tests.test_helpers import CourseStructureTestCase
 
@@ -24,6 +24,8 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
     """
     ContentLibraryTransformer Test
     """
+    TRANSFORMER_CLASS = ContentLibraryTransformer
+    CATEGORY = 'library_content'
 
     def setUp(self):
         """
@@ -41,14 +43,21 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
         CourseEnrollmentFactory.create(user=self.user, course_id=self.course.id, is_active=True)
 
         self.selected_module = MockedModule('{"selected": [["vertical", "vertical_vertical2"]]}')
-        self.transformer = ContentLibraryTransformer()
+        self.transformer = self.TRANSFORMER_CLASS()
+
+    @classmethod
+    def get_content_library_ref(cls):
+        """
+        Return string to use as #ref for content library block in course hierarchy.
+        """
+        return '{category}1'.format(category=cls.CATEGORY)
 
     def get_course_hierarchy(self):
         """
         Get a course hierarchy to test with.
         """
         return [{
-            'org': 'ContentLibraryTransformer',
+            'org': self.TRANSFORMER_CLASS.__name__,
             'course': 'CL101F',
             'run': 'test_run',
             '#type': 'course',
@@ -67,9 +76,9 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
                                     '#ref': 'vertical1',
                                     '#children': [
                                         {
-                                            'metadata': {'category': 'library_content'},
-                                            '#type': 'library_content',
-                                            '#ref': 'library_content1',
+                                            'metadata': {'category': self.CATEGORY},
+                                            '#type': self.CATEGORY,
+                                            '#ref': self.get_content_library_ref(),
                                             '#children': [
                                                 {
                                                     'metadata': {'display_name': "CL Vertical 2"},
@@ -130,7 +139,7 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
         # Should dynamically assign a block to student
         trans_keys = set(trans_block_structure.get_block_keys())
         block_key_set = self.get_block_key_set(
-            self.blocks, 'course', 'chapter1', 'lesson1', 'vertical1', 'library_content1'
+            self.blocks, 'course', 'chapter1', 'lesson1', 'vertical1', self.get_content_library_ref()
         )
         for key in block_key_set:
             self.assertIn(key, trans_keys)
@@ -141,7 +150,9 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
 
         # Check course structure again, with mocked selected modules for a user.
         with mock.patch(
-            'course_blocks.transformers.library_content.ContentLibraryTransformer._get_student_module',
+            'course_blocks.transformers.library_content.{transformer_class}._get_student_module'.format(
+                transformer_class=self.TRANSFORMER_CLASS.__name__
+            ),
             return_value=self.selected_module
         ):
             clear_course_from_cache(self.course.id)
@@ -158,8 +169,16 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
                     'chapter1',
                     'lesson1',
                     'vertical1',
-                    'library_content1',
+                    self.get_content_library_ref(),
                     'vertical2',
                     'html1'
                 )
             )
+
+
+class AdaptiveContentLibraryTransformerTestCase(ContentLibraryTransformerTestCase):
+    """
+    AdaptiveContentLibraryTransformer Test
+    """
+    TRANSFORMER_CLASS = AdaptiveContentLibraryTransformer
+    CATEGORY = 'adaptive_library_content'
