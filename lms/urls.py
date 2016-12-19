@@ -29,6 +29,9 @@ urlpatterns = (
     url(r'^login_ajax$', 'student.views.login_user', name="login"),
     url(r'^login_ajax/(?P<error>[^/]*)$', 'student.views.login_user'),
 
+    # Revisions API
+    url(r'^api/revisions/', 'adaptive_domoscio.views.revisions', name='revisions'),
+
     url(r'^email_confirm/(?P<key>[^/]*)$', 'student.views.confirm_email_change'),
     url(r'^event$', 'track.views.user_track'),
     url(r'^performance$', 'performance.views.performance_log'),

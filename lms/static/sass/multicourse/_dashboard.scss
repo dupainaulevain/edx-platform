@@ -32,6 +32,18 @@
     }
   }
 
+  .dashboard-revisions {
+    margin: ($baseline*2) 0;
+    border-top: 3px solid #f72c30;
+    border-bottom: 3px solid #f72c30 !important;
+    padding: $baseline 0;
+    color: $link-color;
+    li {
+      list-style-type: disc;
+      color: $link-color;
+    }
+  }
+
   .profile-sidebar {
     background: transparent;
     @include float(right);

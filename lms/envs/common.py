@@ -1941,6 +1941,8 @@ INSTALLED_APPS = (
     'openedx.core.djangoapps.self_paced',
 
     'sorl.thumbnail',
+
+    'adaptive_domoscio',
 )
 
 # Migrations which are not in the standard module "migrations"
