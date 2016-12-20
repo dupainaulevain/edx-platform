@@ -115,6 +115,12 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
             ]
         }]
 
+    def _assert_default_selection(self, *verticals_selected):
+        """
+        Assert that at least one of the blocks in `verticals` is selected.
+        """
+        self.assertTrue(any(vertical_selected for vertical_selected in verticals_selected))
+
     def test_content_library(self):
         """
         Test when course has content library section.
@@ -146,7 +152,7 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
 
         vertical2_selected = self.get_block_key_set(self.blocks, 'vertical2').pop() in trans_keys
         vertical3_selected = self.get_block_key_set(self.blocks, 'vertical3').pop() in trans_keys
-        self.assertTrue(vertical2_selected or vertical3_selected)
+        self._assert_default_selection(vertical2_selected, vertical3_selected)
 
         # Check course structure again, with mocked selected modules for a user.
         with mock.patch(
@@ -182,3 +188,9 @@ class AdaptiveContentLibraryTransformerTestCase(ContentLibraryTransformerTestCas
     """
     TRANSFORMER_CLASS = AdaptiveContentLibraryTransformer
     CATEGORY = 'adaptive_library_content'
+
+    def _assert_default_selection(self, *verticals_selected):
+        """
+        Assert that none of the blocks in `verticals_selected` are selected.
+        """
+        self.assertTrue(not any(vertical_selected for vertical_selected in verticals_selected))
