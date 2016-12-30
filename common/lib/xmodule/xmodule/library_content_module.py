@@ -2,7 +2,8 @@
 """
 LibraryContent: The XBlock used to include blocks from a library in a course.
 """
-import json, logging
+import json
+import logging
 from lxml import etree
 from copy import copy
 from capa.responsetypes import registry
@@ -16,7 +17,7 @@ from webob import Response
 from xblock.core import XBlock
 from xblock.fields import Scope, String, List, Integer, Boolean
 from xblock.fragment import Fragment
-from xmodule.util.adaptive_learning import AdaptiveLearningAPIMixin
+from xmodule.util.adaptive_learning import AdaptiveLearningAPIClient
 from xmodule.validation import StudioValidationMessage, StudioValidation
 from xmodule.x_module import XModule, STUDENT_VIEW
 from xmodule.studio_editable import StudioEditableModule, StudioEditableDescriptor
@@ -150,7 +151,7 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
     """
 
     @classmethod
-    def make_selection(cls, selected, children, max_count, mode, **kwargs):
+    def make_selection(cls, selected, children, max_count, mode, **kwargs):  # pylint: disable=unused-argument
         """
         Dynamically selects block_ids indicating which of the possible children are displayed to the current user.
 
@@ -390,11 +391,18 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
 
 @XBlock.wants('user')
 @XBlock.wants('library_tools')  # Only needed in studio
-class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentModule, AdaptiveLearningAPIMixin):
+class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentModule):
     """
     A specialized version of Randomized Content Block that communicates
     with an external service to determine when to show its children, and which ones.
     """
+
+    @lazy
+    def api_client(self):
+        """
+        Return instance of `AdaptiveLearningAPIClient` for parent course of this block.
+        """
+        return AdaptiveLearningAPIClient(self.parent_course)
 
     @lazy
     def parent_course(self):
@@ -412,28 +420,18 @@ class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentM
         return parent_unit.scope_ids.usage_id.block_id
 
     @lazy
-    def anonymous_user_id(self):
+    def current_user_id(self):
         """
-        Return anonymous ID for current user.
-
-        Note that we can't use `user_service.get_anonymous_user_id` here
-        because it only produces meaningful results for staff users.
+        Return ID of current user.
         """
-        user_service = self.runtime.service(self, 'user')
-        if user_service:
-            current_user = user_service.get_current_user()
-            user_id = current_user.opt_attrs.get('edx-platform.user_id')
-            anonymous_user_id = self.make_anonymous_user_id(user_id)
-        else:
-            anonymous_user_id = None
-        return anonymous_user_id
+        return self.descriptor.get_user_id()
 
     @lazy
     def child_block_ids(self):
         """
         Return list of `block_id`s identifying children of this block.
         """
-        return [child.block_id for child in self.children]
+        return [child.block_id for child in self.children]  # pylint: disable=no-member
 
     @classmethod
     def make_selection(cls, selected, children, max_count, mode, **kwargs):
@@ -518,7 +516,7 @@ class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentM
         # Determine children to display based on information about pending reviews from external service.
         # This needs to happen here (at instance level) because we need access to course and block-specific data,
         # which is not available at the class level.
-        selected = self.get_selections_current_user(self.children)
+        selected = self.get_selections_current_user(self.children)  # pylint: disable=no-member
         block_keys = self.make_selection(
             selected, self.children, self.max_count, "adaptive", previously_selected=self.selected  # pylint: disable=no-member
         )
@@ -537,7 +535,7 @@ class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentM
         Check with external service whether any children of this block
         are scheduled for review by the current user, and return them.
         """
-        pending_reviews = self.get_pending_reviews(self.anonymous_user_id)
+        pending_reviews = self.api_client.get_pending_reviews(self.current_user_id)
         valid_block_keys = {
             c.block_id: (c.block_type, c.block_id) for c in children
         }
@@ -568,10 +566,10 @@ class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentM
         """
         # Get block ID of parent unit
         block_id = self.parent_unit_id
-        # Get student ID for current user
-        user_id = self.anonymous_user_id
+        # Get ID of current user
+        user_id = self.current_user_id
         # Send "Unit viewed" event
-        self.create_read_event(block_id, user_id)
+        self.api_client.create_read_event(block_id, user_id)
 
     def link_current_user_to_children(self):
         """
@@ -580,10 +578,19 @@ class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentM
         """
         # Get IDs of children
         block_ids = self.child_block_ids
-        # Get student ID for current user
-        user_id = self.anonymous_user_id
+        # Get ID of current user
+        user_id = self.current_user_id
         # Establish links
-        self.create_knowledge_node_students(block_ids, user_id)
+        self.api_client.create_knowledge_node_students(block_ids, user_id)
+
+    @classmethod
+    def send_result_event(cls, course, block_id, user_id, result):
+        """
+        Create result event for unit identified by `block_id` and student identified by `user_id`
+        using adaptive learning configuration from `course`.
+        """
+        api_client = AdaptiveLearningAPIClient(course)
+        api_client.create_result_event(block_id, user_id, result)
 
 
 @XBlock.wants('user')

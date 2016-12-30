@@ -182,7 +182,7 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
             )
 
 
-class AdaptiveContentLibraryTransformerTestCase(ContentLibraryTransformerTestCase):
+class AdaptiveContentLibraryTransformerTestCase(ContentLibraryTransformerTestCase):  # pylint: disable=test-inherits-tests
     """
     AdaptiveContentLibraryTransformer Test
     """
