@@ -446,6 +446,32 @@ class AdaptiveLibraryContentModuleTestMixin(LibraryContentModuleTestMixin):
             patched_class.assert_called_once_with(course)
             mock_client.create_result_event.assert_called_once_with(block_id, user_id, result)
 
+    def test_fetch_pending_reviews(self):
+        """
+        Test that `fetch_pending_reviews` calls method for obtaining pending reviews
+        with appropriate arguments, and returns results unchanged.
+        """
+        self._bind_course_module(self.lc_block)
+        module = self.lc_block._xmodule  # pylint: disable=protected-access
+        course = module.parent_course
+        user_id = module.current_user_id
+        expected_pending_reviews = [
+            {
+                'knowledge_node_uid': 'knowledge-node-{n}'.format(n=n),
+                'review_question_uid': 'review-question-{n}'.format(n=n),
+            } for n in range(5)
+        ]
+        with patch(
+            'xmodule.library_content_module.AdaptiveLearningAPIClient'
+        ) as patched_class:
+            mock_client = Mock(autospec=True)
+            mock_client.get_pending_reviews.return_value = expected_pending_reviews
+            patched_class.return_value = mock_client
+            pending_reviews = AdaptiveLibraryContentModule.fetch_pending_reviews(course, user_id)
+            self.assertEqual(pending_reviews, expected_pending_reviews)
+            patched_class.assert_called_once_with(course)
+            mock_client.get_pending_reviews.assert_called_once_with(user_id)
+
     def test_student_view(self):
         """
         Test that `student_view` notifies external service that parent unit has been viewed,

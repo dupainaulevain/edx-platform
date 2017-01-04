@@ -33,6 +33,25 @@ class AdaptiveLearningConfiguration(object):
         """
         return str(self._configuration)
 
+    @staticmethod
+    def is_meaningful(configuration):
+        """
+        Return True if `configuration` has meaningful values for all relevant settings,
+        else False.
+
+        If `configuration` is empty, return False as well.
+        """
+        if not configuration:
+            return False
+
+        is_meaningful = True
+        for val in configuration.values():
+            if isinstance(val, str):
+                is_meaningful &= bool(val)  # Empty strings are not considered meaningful
+            elif isinstance(val, int):
+                is_meaningful &= (val >= 0)  # Negative ints are not considered meaningful
+        return is_meaningful
+
 
 class AdaptiveLearningAPIMixin(object):
     """
@@ -100,7 +119,7 @@ class AdaptiveLearningAPIMixin(object):
         """
         Return URL for accessing pending reviews.
         """
-        return '{base_url}/review_utils/fetch_reviews'.format(base_url=self.instance_url)
+        return '{base_url}/review_utils/fetch_pending_reviews_questions'.format(base_url=self.instance_url)
 
     @lazy
     def request_headers(self):
@@ -295,7 +314,7 @@ class AdaptiveLearningAPIClient(AdaptiveLearningAPIMixin):
         """
         url = self.pending_reviews_url
         student_uid = self.generate_student_uid(user_id)
-        payload = {'student_uid': student_uid}
+        payload = {'student_uid': student_uid, 'nested': True}
         response = requests.get(url, headers=self.request_headers, data=payload)
         pending_reviews_user = json.loads(response.content)
         return pending_reviews_user

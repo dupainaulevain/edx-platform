@@ -27,7 +27,7 @@ URLS = {
     'students_url': 'https://dummy.com/v42/instances/23/students',
     'events_url': 'https://dummy.com/v42/instances/23/events',
     'knowledge_node_students_url': 'https://dummy.com/v42/instances/23/knowledge_node_students',
-    'pending_reviews_url': 'https://dummy.com/v42/instances/23/review_utils/fetch_reviews'
+    'pending_reviews_url': 'https://dummy.com/v42/instances/23/review_utils/fetch_pending_reviews_questions'
 }
 
 
@@ -41,6 +41,7 @@ def make_mock_course():
     return course
 
 
+@ddt.ddt
 class TestAdaptiveLearningConfiguration(unittest.TestCase):
     """
     Tests for class that stores configuration for interacting with external services
@@ -73,6 +74,45 @@ class TestAdaptiveLearningConfiguration(unittest.TestCase):
             str(self.adaptive_learning_configuration),
             str(self.adaptive_learning_configuration._configuration)  # pylint: disable=protected-access
         )
+
+    @ddt.data(
+        # Empty configuration
+        ({}, False),
+        # Configuration with *no* meaningful values
+        (
+            {
+                'a': '',
+                'b': '',
+                'c': -1
+            },
+            False
+        ),
+        # Configuration with *some* meaningful values
+        (
+            {
+                'a': 'meaningful-value',
+                'b': '',
+                'c': -1
+            },
+            False
+        ),
+        # Configuration with *all* meaningful values
+        (
+            {
+                'a': 'meaningful-value',
+                'b': 'another-meaningful-value',
+                'c': 42
+            },
+            True
+        ),
+    )
+    @ddt.unpack
+    def test_is_meaningful(self, configuration, expected_result):
+        """
+        Test that `is_meaningful` returns appropriate results for configurations
+        that are (not) meaningful.
+        """
+        self.assertEqual(AdaptiveLearningConfiguration.is_meaningful(configuration), expected_result)
 
 
 class DummyClient(AdaptiveLearningAPIMixin):
@@ -541,9 +581,8 @@ class TestAdaptiveLearningAPIClient(AdaptiveLearningAPITestMixin):
 
     def test_get_pending_reviews(self):
         """
-        Test that `_get_student` method returns appropriate information
-        if external service knows about a given student,
-        and `None` otherwise.
+        Test that `get_pending_reviews` method returns fetches list of pending reviews
+        for a given user from external service, and returns them.
         """
         self.register_pending_reviews(self.PENDING_REVIEWS)
 
@@ -564,5 +603,5 @@ class TestAdaptiveLearningAPIClient(AdaptiveLearningAPITestMixin):
             patched_requests.get.assert_called_once_with(
                 self.api_client.pending_reviews_url,
                 headers=self.api_client.request_headers,
-                data={'student_uid': student_uid}
+                data={'student_uid': student_uid, 'nested': True}
             )

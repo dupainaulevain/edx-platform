@@ -1945,7 +1945,7 @@ INSTALLED_APPS = (
 
     'sorl.thumbnail',
 
-    'adaptive_domoscio',
+    'adaptive_learning',
 )
 
 # Migrations which are not in the standard module "migrations"

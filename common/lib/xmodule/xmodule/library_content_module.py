@@ -542,8 +542,6 @@ class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentM
         selections = []
         for pending_review in pending_reviews:
             unit_id = pending_review.get('knowledge_node_uid')
-            # TODO: Adjust if necessary (name of property that specifies block ID of review question
-            # might differ from the one we are currently using):
             question_id = pending_review.get('review_question_uid')
             if unit_id == self.parent_unit_id and question_id in valid_block_keys:
                 selections.append(valid_block_keys[question_id])
@@ -591,6 +589,15 @@ class AdaptiveLibraryContentModule(AdaptiveLibraryContentFields, LibraryContentM
         """
         api_client = AdaptiveLearningAPIClient(course)
         api_client.create_result_event(block_id, user_id, result)
+
+    @classmethod
+    def fetch_pending_reviews(cls, course, user_id):
+        """
+        Return pending reviews for user identified by `user_id`
+        using adaptive learning configuration from `course`.
+        """
+        api_client = AdaptiveLearningAPIClient(course)
+        return api_client.get_pending_reviews(user_id)
 
 
 @XBlock.wants('user')

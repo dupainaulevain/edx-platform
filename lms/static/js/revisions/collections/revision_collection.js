@@ -12,10 +12,6 @@ define([
         url: '/api/revisions/',
         fetchXhr: null,
 
-        initialize: function (models, options) {
-            Backbone.Collection.prototype.initialize.apply(this, arguments);
-        },
-
         fetchRevisions: function () {
             this.fetchXhr && this.fetchXhr.abort();
             this.resetState();
@@ -29,10 +25,6 @@ define([
                     self.trigger('error');
                 }
             });
-        },
-
-        parse: function(response) {
-            return response;
         },
 
         resetState: function () {

@@ -6,8 +6,7 @@ define([
     'backbone',
     'gettext',
 ], function ($, _, Backbone, gettext) {
-
-   'use strict';
+    'use strict';
 
     return Backbone.View.extend({
 
