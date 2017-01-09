@@ -581,7 +581,7 @@ class TestAdaptiveLearningAPIClient(AdaptiveLearningAPITestMixin):
 
     def test_get_pending_reviews(self):
         """
-        Test that `get_pending_reviews` method returns fetches list of pending reviews
+        Test that `get_pending_reviews` method fetches list of pending reviews
         for a given user from external service, and returns them.
         """
         self.register_pending_reviews(self.PENDING_REVIEWS)
@@ -599,6 +599,30 @@ class TestAdaptiveLearningAPIClient(AdaptiveLearningAPITestMixin):
             patched_requests.get.return_value = response
             pending_reviews = self.api_client.get_pending_reviews(user_id)
             self.assertEqual(pending_reviews, expected_pending_reviews)
+            patched_generate_student_uid.assert_called_once_with(user_id)
+            patched_requests.get.assert_called_once_with(
+                self.api_client.pending_reviews_url,
+                headers=self.api_client.request_headers,
+                data={'student_uid': student_uid, 'nested': True}
+            )
+
+    def test_get_pending_reviews_unknown_user(self):
+        """
+        Test that `get_pending_reviews` method returns empty list if external service
+        does not know about current user.
+        """
+        user_id = 23
+        student_uid = 'student-23'
+        response = Mock()
+        response.content = 'No Student Found'
+        with patch(
+            'xmodule.util.adaptive_learning.AdaptiveLearningAPIMixin.generate_student_uid'
+        ) as patched_generate_student_uid, \
+                patch('xmodule.util.adaptive_learning.requests') as patched_requests:
+            patched_generate_student_uid.return_value = student_uid
+            patched_requests.get.return_value = response
+            pending_reviews = self.api_client.get_pending_reviews(user_id)
+            self.assertEqual(pending_reviews, [])
             patched_generate_student_uid.assert_called_once_with(user_id)
             patched_requests.get.assert_called_once_with(
                 self.api_client.pending_reviews_url,

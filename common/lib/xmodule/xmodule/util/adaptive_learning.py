@@ -311,10 +311,16 @@ class AdaptiveLearningAPIClient(AdaptiveLearningAPIMixin):
     def get_pending_reviews(self, user_id):
         """
         Return pending reviews for user identified by `user_id`.
+
+        If external service does not know about user (because user is not enrolled in current course,
+        or has never interacted with adaptive learning content in current course), return an empty list.
         """
         url = self.pending_reviews_url
         student_uid = self.generate_student_uid(user_id)
         payload = {'student_uid': student_uid, 'nested': True}
         response = requests.get(url, headers=self.request_headers, data=payload)
-        pending_reviews_user = json.loads(response.content)
+        if response.content == 'No Student Found':
+            pending_reviews_user = []
+        else:
+            pending_reviews_user = json.loads(response.content)
         return pending_reviews_user
