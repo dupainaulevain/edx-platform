@@ -2,7 +2,7 @@
     <a href="<%- url %>">
         <%- name %>
         <% if (due_date) { %>
-            (<%= gettext("before") %> <%
+            (<%= gettext("since") %> <%
                 var d = new Date(due_date*1000),
                     fragments = [
                         d.getDate(),
