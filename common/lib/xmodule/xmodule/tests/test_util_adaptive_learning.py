@@ -448,7 +448,7 @@ class TestAdaptiveLearningAPIMixin(AdaptiveLearningAPITestMixin):
         expected_event = {
             'id': 23,
             'knowledge_node_student_id': knowledge_node_student_id,
-            'type': 'DummyEventType',
+            'type': event_type,
             'payload': None,
         }
         response = Mock()
@@ -463,7 +463,7 @@ class TestAdaptiveLearningAPIMixin(AdaptiveLearningAPITestMixin):
             patched_requests.post.assert_called_once_with(
                 self.dummy_client.events_url,
                 headers=self.dummy_client.request_headers,
-                data={'knowledge_node_student_id': knowledge_node_student_id, 'event_type': event_type}
+                data={'knowledge_node_student_id': knowledge_node_student_id, 'type': event_type}
             )
 
     def test_generate_student_uid(self):

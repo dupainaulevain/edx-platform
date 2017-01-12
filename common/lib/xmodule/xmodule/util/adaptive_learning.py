@@ -240,7 +240,7 @@ class AdaptiveLearningAPIMixin(object):
         knowledge_node_student_id = self.get_knowledge_node_student_id(knowledge_node_uid, student_uid)
         payload = {
             'knowledge_node_student_id': knowledge_node_student_id,
-            'event_type': event_type,
+            'type': event_type,
         }
         payload.update(data)
 
