@@ -49,8 +49,8 @@ class StudentModuleHistoryExtendedRouter(object):
         """
         Only sync StudentModuleHistoryExtended to StudentModuleHistoryExtendedRouter.DATABASE_Name
         """
-        if model_name is not None:
-            model = hints.get('model')
+        model = hints.get('model')
+        if model_name is not None and model is not None:
             if self._is_csmh(model):
                 return db == self.DATABASE_NAME
         if db == self.DATABASE_NAME:
