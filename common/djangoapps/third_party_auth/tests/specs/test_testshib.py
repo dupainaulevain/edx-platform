@@ -226,36 +226,42 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
 
         # Mock the call to the SAP SuccessFactors assertion endpoint
         SAPSF_ASSERTION_URL = 'http://successfactors.com/oauth/idp'
+
         def assertion_callback(_request, _uri, headers):
             """
-            Return a fake assertion after checking that the input is what we expect. 
+            Return a fake assertion after checking that the input is what we expect.
             """
             self.assertIn('private_key=fake_private_key_here', _request.body)
             self.assertIn('user_id=myself', _request.body)
             self.assertIn('token_url=http%3A%2F%2Fsuccessfactors.com%2Foauth%2Ftoken', _request.body)
             self.assertIn('client_id=TatVotSEiCMteSNWtSOnLanCtBGwNhGB', _request.body)
             return (200, headers, 'fake_saml_assertion')
+
         httpretty.register_uri(httpretty.POST, SAPSF_ASSERTION_URL, content_type='text/plain', body=assertion_callback)
 
         SAPSF_BAD_ASSERTION_URL = 'http://successfactors.com/oauth-fake/idp'
+
         def bad_callback(_request, _uri, headers):
             """
-            Return a 404 error when someone tries to call the URL
+            Return a 404 error when someone tries to call the URL.
             """
             return (404, headers, 'NOT AN ASSERTION')
+
         httpretty.register_uri(httpretty.POST, SAPSF_BAD_ASSERTION_URL, content_type='text/plain', body=bad_callback)
 
         # Mock the call to the SAP SuccessFactors token endpoint
         SAPSF_TOKEN_URL = 'http://successfactors.com/oauth/token'
+
         def token_callback(_request, _uri, headers):
             """
-            Return a fake assertion after checking that the input is what we expect. 
+            Return a fake assertion after checking that the input is what we expect.
             """
             self.assertIn('assertion=fake_saml_assertion', _request.body)
             self.assertIn('company_id=NCC1701D', _request.body)
             self.assertIn('grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Asaml2-bearer', _request.body)
             self.assertIn('client_id=TatVotSEiCMteSNWtSOnLanCtBGwNhGB', _request.body)
             return (200, headers, '{"access_token": "faketoken"}')
+
         httpretty.register_uri(
             httpretty.POST,
             SAPSF_TOKEN_URL,
@@ -268,6 +274,7 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
             'http://api.successfactors.com/odata/v2/User(userId=\'myself\')'
             '?$select=username,firstName,lastName,defaultFullName,email'
         )
+
         def user_callback(_request, _uri, headers):
             auth_header = headers.get('Authorization')
             self.assertEqual(auth_header, 'Bearer faketoken')
@@ -284,6 +291,7 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
                     }
                 })
             )
+
         httpretty.register_uri(httpretty.GET, ODATA_USER_URL, content_type='application/json', body=user_callback)
 
     def test_register_insufficient_sapsf_metadata(self):

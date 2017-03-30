@@ -215,7 +215,7 @@ class SAMLTestCase(TestCase):
         kwargs.setdefault('entity_id', "https://saml.example.none")
         super(SAMLTestCase, self).enable_saml(**kwargs)
 
-    @mock.patch('common.djangoapps.third_party_auth.saml.log')
+    @mock.patch('third_party_auth.saml.log')
     def test_get_saml_idp_class_with_fake_identifier(self, log_mock):
         error_mock = log.error
         idp_class = get_saml_idp_class('fake_idp_class_option')
