@@ -22,7 +22,7 @@ TESTSHIB_METADATA_URL_WITH_CACHE_DURATION = 'https://mock.testshib.org/metadata/
 TESTSHIB_SSO_URL = 'https://idp.testshib.org/idp/profile/SAML2/Redirect/SSO'
 
 
-class SamlIntegrationTestUtilities(object):
+class SamlIntegrationTestUtilities(testutil.SAMLTestCase):
     """
     Class contains methods particular to SAML integration testing so that they
     can be separated out from the actual test methods.
@@ -114,7 +114,7 @@ class SamlIntegrationTestUtilities(object):
 
 @ddt.ddt
 @unittest.skipUnless(testutil.AUTH_FEATURE_ENABLED, 'third_party_auth not enabled')
-class TestShibIntegrationTest(SamlIntegrationTestUtilities, IntegrationTestMixin, testutil.SAMLTestCase):
+class TestShibIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUtilities):
     """
     TestShib provider Integration Test, to test SAML functionality
     """
@@ -205,15 +205,11 @@ class TestShibIntegrationTest(SamlIntegrationTestUtilities, IntegrationTestMixin
 
 
 @unittest.skipUnless(testutil.AUTH_FEATURE_ENABLED, 'third_party_auth not enabled')
-class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTestMixin, testutil.SAMLTestCase):
+class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUtilities):
     """
     Test basic SAML capability using the TestShib details, and then check that we're able
     to make the proper calls using the SAP SuccessFactors API.
     """
-    PROVIDER_ID = "saml-testshib"
-    PROVIDER_NAME = "TestShib"
-    PROVIDER_BACKEND = "tpa-saml"
-    PROVIDER_IDP_SLUG = "testshib"
 
     # Note that these details are different than those that will be provided by the SAML
     # assertion metadata. Rather, they will be fetched from the mocked SAPSuccessFactors API.

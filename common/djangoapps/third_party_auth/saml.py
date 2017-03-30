@@ -167,7 +167,7 @@ class SapSuccessFactorsIdentityProvider(SAMLIdentityProvider):
             },
             timeout=10,
         )
-        assertion.raise_for_status
+        assertion.raise_for_status()
         assertion = assertion.text
         token = session.post(
             self.sapsf_token_url,
