@@ -217,7 +217,7 @@ class SAMLTestCase(TestCase):
 
     @mock.patch('third_party_auth.saml.log')
     def test_get_saml_idp_class_with_fake_identifier(self, log_mock):
-        error_mock = log.error
+        error_mock = log_mock.error
         idp_class = get_saml_idp_class('fake_idp_class_option')
         error_mock.assert_called_once_with(
             '%s is not a valid SAMLIdentityProvider subclass; using SAMLIdentityProvider base class.',
