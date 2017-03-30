@@ -10,7 +10,7 @@ import requests
 from social.backends.saml import SAMLAuth, SAMLIdentityProvider, OID_EDU_PERSON_ENTITLEMENT
 from social.exceptions import AuthForbidden, AuthMissingParameter
 
-STANDARD_SAML_PROVIDER_KEY = 'standard_saml'
+STANDARD_SAML_PROVIDER_KEY = 'standard_saml_provider'
 log = logging.getLogger(__name__)
 
 
@@ -156,28 +156,33 @@ class SapSuccessFactorsIdentityProvider(SAMLIdentityProvider):
         Get a Requests session with the headers needed to properly authenticate it with
         the SAP SuccessFactors OData API.
         """
-        assertion = requests.post(
+        session = requests.Session()
+        assertion = session.post(
             self.sapsf_idp_url,
             data={
                 'client_id': self.odata_client_id,
                 'user_id': user_id,
                 'token_url': self.sapsf_token_url,
                 'private_key': self.sapsf_private_key,
-            }
-        ).text
-        token = requests.post(
+            },
+            timeout=10,
+        )
+        assertion.raise_for_status
+        assertion = assertion.text
+        token = session.post(
             self.sapsf_token_url,
             data={
                 'client_id': self.odata_client_id,
                 'company_id': self.odata_company_id,
                 'grant_type': 'urn:ietf:params:oauth:grant-type:saml2-bearer',
                 'assertion': assertion,
-            }
-        ).json()['access_token']
-        session = requests.Session()
+            },
+            timeout=10,
+        )
+        token.raise_for_status()
+        token = token.json()['access_token']
         session.headers.update({'Authorization': 'Bearer {}'.format(token), 'Accept': 'application/json'})
         return session
-
 
     def get_user_details(self, attributes):
         """
@@ -187,15 +192,29 @@ class SapSuccessFactorsIdentityProvider(SAMLIdentityProvider):
         """
         details = super(SapSuccessFactorsIdentityProvider, self).get_user_details(attributes)
         if self.missing_variables():
+            # If there aren't enough details to make the request, log a warning and return the details
+            # from the SAML assertion.
             return details
         username = details['username']
-        client = self.get_odata_api_client(user_id=username)
-        response = client.get(
-            '{root_url}User(userId=\'{user_id}\')?$select=username,firstName,lastName,defaultFullName,email'.format(
-                root_url=self.odata_api_root_url,
-                user_id=username
+        try:
+            client = self.get_odata_api_client(user_id=username)
+            response = client.get(
+                '{root_url}User(userId=\'{user_id}\')?$select=username,firstName,lastName,defaultFullName,email'.format(
+                    root_url=self.odata_api_root_url,
+                    user_id=username
+                ),
+                timeout=10,
             )
-        ).json()
+            response.raise_for_status()
+            response = response.json()
+        except requests.RequestException:
+            # If there was an HTTP level error, log the error and return the details from the SAML assertion.
+            log.warning(
+                'Unable to retrieve user details with username %s from SAPSuccessFactors with company ID %s.',
+                username,
+                self.odata_company_id,
+            )
+            return details
         return {
             'username': response['d']['username'],
             'first_name': response['d']['firstName'],
@@ -203,6 +222,7 @@ class SapSuccessFactorsIdentityProvider(SAMLIdentityProvider):
             'fullname': response['d']['defaultFullName'],
             'email': response['d']['email'],
         }
+
 
 def get_saml_idp_choices():
     """
@@ -214,6 +234,7 @@ def get_saml_idp_choices():
         ('sap_success_factors', 'SAP SuccessFactors provider'),
     )
 
+
 def get_saml_idp_class(idp_identifier_string):
     """
     Given a string ID indicating the type of identity provider in use during a given request, return
@@ -223,4 +244,9 @@ def get_saml_idp_class(idp_identifier_string):
         STANDARD_SAML_PROVIDER_KEY: SAMLIdentityProvider,
         'sap_success_factors': SapSuccessFactorsIdentityProvider,
     }
+    if idp_identifier_string not in choices:
+        log.error(
+            '%s is not a valid SAMLIdentityProvider subclass; using SAMLIdentityProvider base class.',
+            idp_identifier_string
+        )
     return choices.get(idp_identifier_string, SAMLIdentityProvider)
