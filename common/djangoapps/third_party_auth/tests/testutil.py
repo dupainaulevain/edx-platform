@@ -221,7 +221,7 @@ class SAMLTestCase(TestCase):
         idp_class = get_saml_idp_class('fake_idp_class_option')
         error_mock.assert_called_once_with(
             '%s is not a valid SAMLIdentityProvider subclass; using SAMLIdentityProvider base class.',
-            fake_idp_class_option
+            'fake_idp_class_option'
         )
         self.assertIs(idp_class, SAMLIdentityProvider)
 
