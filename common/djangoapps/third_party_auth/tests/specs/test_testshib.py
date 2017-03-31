@@ -38,7 +38,7 @@ class SamlIntegrationTestUtilities(object):
 
     def setUp(self):
         super(SamlIntegrationTestUtilities, self).setUp()
-        provider = self.enable_saml(
+        self.enable_saml(
             private_key=self._get_private_key(),
             public_key=self._get_public_key(),
             entity_id="https://saml.example.none",
@@ -64,7 +64,6 @@ class SamlIntegrationTestUtilities(object):
         )
         self.addCleanup(httpretty.disable)
         self.addCleanup(httpretty.reset)
-        self.addCleanup(provider.delete)
 
         # Configure the SAML library to use the same request ID for every request.
         # Doing this and freezing the time allows us to play back recorded request/response pairs
