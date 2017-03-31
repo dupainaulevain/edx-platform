@@ -22,7 +22,7 @@ TESTSHIB_METADATA_URL_WITH_CACHE_DURATION = 'https://mock.testshib.org/metadata/
 TESTSHIB_SSO_URL = 'https://idp.testshib.org/idp/profile/SAML2/Redirect/SSO'
 
 
-class SamlIntegrationTestUtilities(testutil.SAMLTestCase):
+class SamlIntegrationTestUtilities(object):
     """
     Class contains methods particular to SAML integration testing so that they
     can be separated out from the actual test methods.
@@ -38,7 +38,7 @@ class SamlIntegrationTestUtilities(testutil.SAMLTestCase):
 
     def setUp(self):
         super(SamlIntegrationTestUtilities, self).setUp()
-        self.enable_saml(
+        provider = self.enable_saml(
             private_key=self._get_private_key(),
             public_key=self._get_public_key(),
             entity_id="https://saml.example.none",
@@ -64,6 +64,7 @@ class SamlIntegrationTestUtilities(testutil.SAMLTestCase):
         )
         self.addCleanup(httpretty.disable)
         self.addCleanup(httpretty.reset)
+        self.addCleanup(provider.delete)
 
         # Configure the SAML library to use the same request ID for every request.
         # Doing this and freezing the time allows us to play back recorded request/response pairs
@@ -114,7 +115,7 @@ class SamlIntegrationTestUtilities(testutil.SAMLTestCase):
 
 @ddt.ddt
 @unittest.skipUnless(testutil.AUTH_FEATURE_ENABLED, 'third_party_auth not enabled')
-class TestShibIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUtilities):
+class TestShibIntegrationTest(SamlIntegrationTestUtilities, IntegrationTestMixin, testutil.SAMLTestCase):
     """
     TestShib provider Integration Test, to test SAML functionality
     """
@@ -205,7 +206,7 @@ class TestShibIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUtilities
 
 
 @unittest.skipUnless(testutil.AUTH_FEATURE_ENABLED, 'third_party_auth not enabled')
-class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUtilities):
+class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTestMixin, testutil.SAMLTestCase):
     """
     Test basic SAML capability using the TestShib details, and then check that we're able
     to make the proper calls using the SAP SuccessFactors API.
@@ -218,8 +219,10 @@ class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUti
     USER_USERNAME = "jsmith"
 
     def setUp(self):
+        """
+        Mock out HTTP calls to various endpoints using httpretty.
+        """
         super(SuccessFactorsIntegrationTest, self).setUp()
-        # Mock out httpretty calls for the SuccessFactors API
 
         # Mock the call to the SAP SuccessFactors assertion endpoint
         SAPSF_ASSERTION_URL = 'http://successfactors.com/oauth/idp'
@@ -259,12 +262,7 @@ class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUti
             self.assertIn('client_id=TatVotSEiCMteSNWtSOnLanCtBGwNhGB', _request.body)
             return (200, headers, '{"access_token": "faketoken"}')
 
-        httpretty.register_uri(
-            httpretty.POST,
-            SAPSF_TOKEN_URL,
-            content_type='application/json',
-            body=token_callback
-        )
+        httpretty.register_uri(httpretty.POST, SAPSF_TOKEN_URL, content_type='application/json', body=token_callback)
 
         # Mock the call to the SAP SuccessFactors OData user endpoint
         ODATA_USER_URL = (
@@ -294,10 +292,11 @@ class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUti
     def test_register_insufficient_sapsf_metadata(self):
         """
         Configure the provider such that it doesn't have enough details to contact the SAP
-        SuccessFactors API, and falls back to the data it receives from the SAML assertion.
+        SuccessFactors API, and test that it falls back to the data it receives from the SAML assertion.
         """
         self._configure_testshib_provider(
             identity_provider_type='sap_success_factors',
+            metadata_source=TESTSHIB_METADATA_URL,
             other_settings='{"key_i_dont_need":"value_i_also_dont_need"}',
         )
         # Because we're getting details from the assertion, fall back to the initial set of details.
@@ -313,6 +312,7 @@ class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUti
         """
         self._configure_testshib_provider(
             identity_provider_type='sap_success_factors',
+            metadata_source=TESTSHIB_METADATA_URL,
             other_settings=json.dumps({
                 'sapsf_oauth_root_url': 'http://successfactors.com/oauth/',
                 'sapsf_private_key': 'fake_private_key_here',
@@ -330,6 +330,7 @@ class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUti
         """
         self._configure_testshib_provider(
             identity_provider_type='sap_success_factors',
+            metadata_source=TESTSHIB_METADATA_URL,
             other_settings=json.dumps({
                 'sapsf_oauth_root_url': 'http://successfactors.com/oauth-fake/',
                 'sapsf_private_key': 'fake_private_key_here',
@@ -338,12 +339,13 @@ class SuccessFactorsIntegrationTest(IntegrationTestMixin, SamlIntegrationTestUti
                 'odata_client_id': 'TatVotSEiCMteSNWtSOnLanCtBGwNhGB',
             })
         )
+        # Because we're getting details from the assertion, fall back to the initial set of details.
         self.USER_EMAIL = "myself@testshib.org"
         self.USER_NAME = "Me Myself And I"
         self.USER_USERNAME = "myself"
         super(SuccessFactorsIntegrationTest, self).test_register()
 
-    @skip('Test not necessar for this subclass')
+    @skip('Test not necessary for this subclass')
     def test_get_saml_idp_class_with_fake_identifier(self):
         pass
 

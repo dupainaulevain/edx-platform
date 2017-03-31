@@ -11,6 +11,7 @@ from social.backends.saml import SAMLAuth, SAMLIdentityProvider, OID_EDU_PERSON_
 from social.exceptions import AuthForbidden, AuthMissingParameter
 
 STANDARD_SAML_PROVIDER_KEY = 'standard_saml_provider'
+SAP_SUCCESSFACTORS_SAML_KEY = 'sap_success_factors'
 log = logging.getLogger(__name__)
 
 
@@ -151,7 +152,7 @@ class SapSuccessFactorsIdentityProvider(SAMLIdentityProvider):
             )
             return missing
 
-    def get_odata_api_client(self, user_id='sfadmin'):
+    def get_odata_api_client(self, user_id):
         """
         Get a Requests session with the headers needed to properly authenticate it with
         the SAP SuccessFactors OData API.
@@ -231,7 +232,7 @@ def get_saml_idp_choices():
     """
     return (
         (STANDARD_SAML_PROVIDER_KEY, 'Standard SAML provider'),
-        ('sap_success_factors', 'SAP SuccessFactors provider'),
+        (SAP_SUCCESSFACTORS_SAML_KEY, 'SAP SuccessFactors provider'),
     )
 
 
@@ -242,7 +243,7 @@ def get_saml_idp_class(idp_identifier_string):
     """
     choices = {
         STANDARD_SAML_PROVIDER_KEY: SAMLIdentityProvider,
-        'sap_success_factors': SapSuccessFactorsIdentityProvider,
+        SAP_SUCCESSFACTORS_SAML_KEY: SapSuccessFactorsIdentityProvider,
     }
     if idp_identifier_string not in choices:
         log.error(
