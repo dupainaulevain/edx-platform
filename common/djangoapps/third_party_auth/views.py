@@ -12,7 +12,7 @@ from social.apps.django_app.utils import load_strategy, load_backend
 from social.utils import setting_name
 from student.models import UserProfile
 from student.views import compose_and_send_activation_email
-from .models import SAMLConfiguration
+from .models import SAMLConfiguration, _PSA_SAML_BACKENDS
 
 URL_NAMESPACE = getattr(settings, setting_name('URL_NAMESPACE'), None) or 'social'
 
@@ -40,12 +40,15 @@ def saml_metadata_view(request):
     Get the Service Provider metadata for this edx-platform instance.
     You must send this XML to any Shibboleth Identity Provider that you wish to use.
     """
+    backend_name = request.GET.get('backend_name', 'tpa-saml')
+    if backend_name not in _PSA_SAML_BACKENDS:
+        raise Http404
     if not SAMLConfiguration.is_enabled(request.site):
         raise Http404
-    complete_url = reverse('social:complete', args=("tpa-saml", ))
+    complete_url = reverse('social:complete', args=(backend_name, ))
     if settings.APPEND_SLASH and not complete_url.endswith('/'):
         complete_url = complete_url + '/'  # Required for consistency
-    saml_backend = load_backend(load_strategy(request), "tpa-saml", redirect_uri=complete_url)
+    saml_backend = load_backend(load_strategy(request), backend_name, redirect_uri=complete_url)
     metadata, errors = saml_backend.generate_metadata_xml()
 
     if not errors:

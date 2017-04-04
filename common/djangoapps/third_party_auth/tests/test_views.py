@@ -30,6 +30,12 @@ class SAMLMetadataTest(SAMLTestCase):
         response = self.client.get(self.METADATA_URL)
         self.assertEqual(response.status_code, 404)
 
+    def test_metadata_fake_backend_specified(self):
+        """ When SAML is not enabled, the metadata view should return 404 """
+        self.enable_saml(enabled=False)
+        response = self.client.get(self.METADATA_URL, {'backend_name': 'fake-backend-name'})
+        self.assertEqual(response.status_code, 404)
+
     def test_metadata(self):
         self.enable_saml()
         doc = self._fetch_metadata()
@@ -37,6 +43,14 @@ class SAMLMetadataTest(SAMLTestCase):
         acs_node = doc.find(".//{}".format(etree.QName(SAML_XML_NS, 'AssertionConsumerService')))
         self.assertIsNotNone(acs_node)
         self.assertEqual(acs_node.attrib['Location'], 'http://example.none/auth/complete/tpa-saml/')
+
+    def test_metadata_with_real_backend(self):
+        self.enable_saml()
+        doc = self._fetch_metadata(backend_name='sap-sf-saml')
+        # Check the ACS URL:
+        acs_node = doc.find(".//{}".format(etree.QName(SAML_XML_NS, 'AssertionConsumerService')))
+        self.assertIsNotNone(acs_node)
+        self.assertEqual(acs_node.attrib['Location'], 'http://example.none/auth/complete/sap-sf-saml/')
 
     def test_default_contact_info(self):
         self.enable_saml()
@@ -104,9 +118,9 @@ class SAMLMetadataTest(SAMLTestCase):
         self.assertIsNotNone(pub_key_node)
         self.assertIn(pub_key_starts_with, pub_key_node.text)
 
-    def _fetch_metadata(self):
+    def _fetch_metadata(self, **params):
         """ Fetch and parse the metadata XML at self.METADATA_URL """
-        response = self.client.get(self.METADATA_URL)
+        response = self.client.get(self.METADATA_URL, params)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'text/xml')
         # The result should be valid XML:

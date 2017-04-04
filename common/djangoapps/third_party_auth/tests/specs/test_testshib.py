@@ -269,8 +269,8 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
             '?$select=username,firstName,lastName,defaultFullName,email'
         )
 
-        def user_callback(_request, _uri, headers):
-            auth_header = headers.get('Authorization')
+        def user_callback(request, _uri, headers):
+            auth_header = request.headers.get('Authorization')
             self.assertEqual(auth_header, 'Bearer faketoken')
             return (
                 200,
@@ -294,7 +294,7 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
         SuccessFactors API, and test that it falls back to the data it receives from the SAML assertion.
         """
         self._configure_testshib_provider(
-            identity_provider_type='sap_success_factors',
+            backend_name='sap-sf-saml',
             metadata_source=TESTSHIB_METADATA_URL,
             other_settings='{"key_i_dont_need":"value_i_also_dont_need"}',
         )
@@ -310,7 +310,7 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
         API, and ensure that the data it gets that way gets passed to the registration form.
         """
         self._configure_testshib_provider(
-            identity_provider_type='sap_success_factors',
+            backend_name='sap-sf-saml',
             metadata_source=TESTSHIB_METADATA_URL,
             other_settings=json.dumps({
                 'sapsf_oauth_root_url': 'http://successfactors.com/oauth/',
@@ -328,7 +328,7 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
         metadata from the SAML assertion.
         """
         self._configure_testshib_provider(
-            identity_provider_type='sap_success_factors',
+            backend_name='sap-sf-saml',
             metadata_source=TESTSHIB_METADATA_URL,
             other_settings=json.dumps({
                 'sapsf_oauth_root_url': 'http://successfactors.com/oauth-fake/',
