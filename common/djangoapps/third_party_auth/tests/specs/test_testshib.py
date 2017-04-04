@@ -210,6 +210,7 @@ class SuccessFactorsIntegrationTest(SamlIntegrationTestUtilities, IntegrationTes
     Test basic SAML capability using the TestShib details, and then check that we're able
     to make the proper calls using the SAP SuccessFactors API.
     """
+    PROVIDER_BACKEND = 'sap-sf-saml'
 
     # Note that these details are different than those that will be provided by the SAML
     # assertion metadata. Rather, they will be fetched from the mocked SAPSuccessFactors API.

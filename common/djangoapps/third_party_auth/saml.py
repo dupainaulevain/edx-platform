@@ -143,7 +143,6 @@ class SapSuccessFactorsAuthBackend(SAMLAuthBackend):
             },
             timeout=timeout,
         )
-        log.warning('Posted assertion')
         assertion.raise_for_status()
         assertion = assertion.text
         token = session.post(
@@ -156,7 +155,6 @@ class SapSuccessFactorsAuthBackend(SAMLAuthBackend):
             },
             timeout=timeout,
         )
-        log.warning('Posted and got token')
         token.raise_for_status()
         token = token.json()['access_token']
         session.headers.update({'Authorization': 'Bearer {}'.format(token), 'Accept': 'application/json'})
@@ -187,7 +185,7 @@ class SapSuccessFactorsAuthBackend(SAMLAuthBackend):
             )
             response.raise_for_status()
             response = response.json()
-        except requests.RequestException as err:
+        except requests.RequestException:
             # If there was an HTTP level error, log the error and return the details from the SAML assertion.
             log.warning(
                 'Unable to retrieve user details with username %s from SAPSuccessFactors with company ID %s.',
