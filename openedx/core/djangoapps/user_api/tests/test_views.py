@@ -16,7 +16,7 @@ from django.test.testcases import TransactionTestCase
 from django.test.utils import override_settings
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from pytz import common_timezones_set, UTC
-from social.apps.django_app.default.models import UserSocialAuth
+from social_django.models import UserSocialAuth
 
 from django_comment_common import models
 from openedx.core.djangoapps.site_configuration.helpers import get_value
@@ -1805,7 +1805,6 @@ class ThirdPartyRegistrationTestMixin(ThirdPartyOAuthTestMixin, CacheIsolationTe
         for conflict_attribute in ["username", "email"]:
             self.assertIn(conflict_attribute, errors)
             self.assertIn("belongs to an existing account", errors[conflict_attribute][0]["user_message"])
-        self.assertNotIn("partial_pipeline", self.client.session)
 
     def _assert_access_token_error(self, response, expected_error_message):
         """Assert that the given response was an error for the access_token field with the given error message."""
@@ -1815,7 +1814,6 @@ class ThirdPartyRegistrationTestMixin(ThirdPartyOAuthTestMixin, CacheIsolationTe
             response_json,
             {"access_token": [{"user_message": expected_error_message}]}
         )
-        self.assertNotIn("partial_pipeline", self.client.session)
 
     def _assert_third_party_session_expired_error(self, response, expected_error_message):
         """Assert that given response is an error due to third party session expiry"""
@@ -1936,7 +1934,7 @@ class TestFacebookRegistrationView(
 
     def test_social_auth_exception(self):
         """
-        According to the do_auth method in social.backends.facebook.py,
+        According to the do_auth method in social_core.backends.facebook.py,
         the Facebook API sometimes responds back a JSON with just False as value.
         """
         self._setup_provider_response_with_body(200, json.dumps("false"))

@@ -8,8 +8,9 @@ import httpretty
 import json
 import time
 from mock import patch
+
 from freezegun import freeze_time
-from social.apps.django_app.default.models import UserSocialAuth
+from social_django.models import UserSocialAuth
 from unittest import skip
 
 from third_party_auth.saml import log as saml_log

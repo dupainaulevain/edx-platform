@@ -12,7 +12,10 @@ settings.INSTALLED_APPS  # pylint: disable=pointless-statement
 from openedx.core.lib.django_startup import autostartup
 import logging
 import analytics
-from openedx.core.djangoapps.monkey_patch import django_db_models_options
+
+from openedx.core.djangoapps.monkey_patch import (
+    django_db_models_options
+)
 
 import xmodule.x_module
 import lms_xblock.runtime
