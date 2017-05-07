@@ -20,6 +20,7 @@ from lms.djangoapps.grades.config.tests.utils import persistent_grades_feature_f
 from openedx.core.djangolib.testing.utils import get_mock_request
 from student.models import CourseEnrollment
 from student.tests.factories import UserFactory
+from xmodule.graders import ShowCorrectness
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
 from xmodule.modulestore.tests.utils import TEST_DATA_DIR
@@ -32,7 +33,7 @@ from ..new.course_grade_factory import CourseGradeFactory
 from ..new.course_grade import ZeroCourseGrade, CourseGrade
 from ..new.subsection_grade_factory import SubsectionGradeFactory
 from ..new.subsection_grade import ZeroSubsectionGrade, SubsectionGrade
-from .utils import mock_get_score, mock_get_submissions_score
+from .utils import mock_get_score, mock_get_submissions_score, answer_problem
 
 
 class GradeTestBase(SharedModuleStoreTestCase):
@@ -61,7 +62,7 @@ class GradeTestBase(SharedModuleStoreTestCase):
                 category='vertical',
                 display_name='Test Vertical 1'
             )
-            problem_xml = MultipleChoiceResponseXMLFactory().build_xml(
+            cls.problem_xml = MultipleChoiceResponseXMLFactory().build_xml(
                 question_text='The correct answer is Choice 3',
                 choices=[False, False, True, False],
                 choice_names=['choice_0', 'choice_1', 'choice_2', 'choice_3']
@@ -70,7 +71,7 @@ class GradeTestBase(SharedModuleStoreTestCase):
                 parent=cls.vertical,
                 category="problem",
                 display_name="Test Problem",
-                data=problem_xml
+                data=cls.problem_xml
             )
             cls.sequence2 = ItemFactory.create(
                 parent=cls.chapter,
@@ -83,7 +84,7 @@ class GradeTestBase(SharedModuleStoreTestCase):
                 parent=cls.sequence2,
                 category="problem",
                 display_name="Test Problem",
-                data=problem_xml
+                data=cls.problem_xml
             )
 
     def setUp(self):
@@ -703,3 +704,81 @@ class TestCourseGradeLogging(ProblemSubmissionTestMixin, SharedModuleStoreTestCa
 
                 # read from persistence, using read
                 self._create_course_grade_and_check_logging(grade_factory.read, log_mock, u'Read')
+
+
+@ddt.ddt
+class TestCourseGradeViewAsStaff(SharedModuleStoreTestCase):
+    """
+    Test scores and grades as viewed by staff and learners, for subsections with various show_correctness settings.
+    """
+    def create_course(self, **subsection_metadata):
+        self.course = CourseFactory.create()
+        with self.store.bulk_operations(self.course.id):
+            self.chapter = ItemFactory.create(
+                parent=self.course,
+                category="chapter",
+                display_name="Test Chapter"
+            )
+            self.sequence = ItemFactory.create(
+                parent=self.chapter,
+                category='sequential',
+                display_name="Test Sequential 1",
+                graded=True,
+                format="Homework",
+                **subsection_metadata
+            )
+            self.vertical = ItemFactory.create(
+                parent=self.sequence,
+                category='vertical',
+                display_name='Test Vertical 1'
+            )
+            self.problem = ItemFactory.create(
+                parent=self.vertical,
+                category="problem",
+                display_name="Test Problem",
+            )
+
+        self.course.set_grading_policy({
+            "GRADER": [
+                {
+                    "type": "Homework",
+                    "min_count": 1,
+                    "drop_count": 0,
+                    "short_label": "HW",
+                    "weight": 1.0,
+                },
+            ],
+            "GRADE_CUTOFFS": {
+                "Pass": 0.5,
+            },
+        })
+        self.store.update_item(self.course, 0)
+
+        self.request = get_mock_request(UserFactory())
+        self.client.login(username=self.request.user.username, password="test")
+        CourseEnrollment.enroll(self.request.user, self.course.id)
+
+    @ddt.data(
+        (None, 2, 5, True, dict(passed=False, percent=0.4, grade=None)),
+        (None, 5, 5, True, dict(passed=True, percent=1, grade='Pass')),
+        (None, 2, 5, False, dict(passed=False, percent=0.4, grade=None)),
+        (None, 5, 5, False, dict(passed=True, percent=1, grade='Pass')),
+
+        # Grade not returned if never show_correctness
+        (ShowCorrectness.NEVER, 2, 5, True, dict(passed=False, percent=0, grade=None)),
+        (ShowCorrectness.NEVER, 5, 5, True, dict(passed=False, percent=0, grade=None)),
+        (ShowCorrectness.NEVER, 2, 5, False, dict(passed=False, percent=0, grade=None)),
+        (ShowCorrectness.NEVER, 5, 5, False, dict(passed=False, percent=0, grade=None)),
+    )
+    @ddt.unpack
+    def test_view_as_staff(self, show_correctness, score, max_value, view_as_staff, expected):
+
+        self.create_course(show_correctness=show_correctness)
+        answer_problem(self.course, self.request, self.problem, score=score, max_value=max_value)
+
+        course_grade = CourseGradeFactory().create(self.request.user, self.course)
+        course_grade.update(view_as_staff=view_as_staff)
+
+        self.assertEqual(course_grade.passed, expected['passed'])
+        self.assertEqual(course_grade.percent, expected['percent'])
+        self.assertEqual(course_grade.letter_grade, expected['grade'])
