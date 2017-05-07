@@ -155,6 +155,12 @@ class CourseGradeBase(object):
         grade_summary['grade'] = self.letter_grade
         return grade_summary
 
+    def update(self, *args, **kwargs):
+        """
+        Override this method to make settings changes that change the course grades.
+        """
+        pass
+
     def _get_chapter_grade_info(self, chapter, course_structure):
         """
         Helper that returns a dictionary of chapter grade information.
