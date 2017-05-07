@@ -1675,14 +1675,14 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
     """
     Tests that verify that the progress page works correctly when displaying subsections where correctness is hidden.
     """
+    NOW = datetime.now(UTC)
+    DAY_DELTA = timedelta(days=1)
+    YESTERDAY = NOW - DAY_DELTA
+    TOMORROW = NOW + DAY_DELTA
+
     def setUp(self):
         super(ProgressPageShowCorrectnessTests, self).setUp()
         self.staff_user = UserFactory.create(is_staff=True)
-
-        now = datetime.now(UTC)
-        day_delta = timedelta(days=1)
-        self.yesterday = now - day_delta
-        self.tomorrow = now + day_delta
 
     def setup_course(self, show_correctness='', due_date=None, graded=False, add_problem=True, **course_options):
         """
@@ -1707,10 +1707,8 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         metadata = dict(
             show_correctness=show_correctness,
         )
-        if due_date is None:
-            metadata['due'] = None
-        else:
-            metadata['due'] = getattr(self, due_date)
+        if due_date is not None:
+            metadata['due'] = due_date
 
         if graded:
             metadata['graded'] = True
@@ -1810,18 +1808,18 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         ('', None, True),
         (ShowCorrectness.ALWAYS, None, False),
         (ShowCorrectness.ALWAYS, None, True),
-        (ShowCorrectness.ALWAYS, 'yesterday', False),
-        (ShowCorrectness.ALWAYS, 'yesterday', True),
-        (ShowCorrectness.ALWAYS, 'tomorrow', False),
-        (ShowCorrectness.ALWAYS, 'tomorrow', True),
+        (ShowCorrectness.ALWAYS, YESTERDAY, False),
+        (ShowCorrectness.ALWAYS, YESTERDAY, True),
+        (ShowCorrectness.ALWAYS, TOMORROW, False),
+        (ShowCorrectness.ALWAYS, TOMORROW, True),
         (ShowCorrectness.PAST_DUE, None, False),
         (ShowCorrectness.PAST_DUE, None, True),
         (ShowCorrectness.NEVER, None, False),
         (ShowCorrectness.NEVER, None, True),
-        (ShowCorrectness.PAST_DUE, 'yesterday', False),
-        (ShowCorrectness.PAST_DUE, 'yesterday', True),
-        (ShowCorrectness.PAST_DUE, 'tomorrow', False),
-        (ShowCorrectness.PAST_DUE, 'tomorrow', True),
+        (ShowCorrectness.PAST_DUE, YESTERDAY, False),
+        (ShowCorrectness.PAST_DUE, YESTERDAY, True),
+        (ShowCorrectness.PAST_DUE, TOMORROW, False),
+        (ShowCorrectness.PAST_DUE, TOMORROW, True),
     )
     @ddt.unpack
     def test_progress_page_no_problem_scores(self, show_correctness, due_date, graded):
@@ -1839,22 +1837,22 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         ('', None, True, True),
         (ShowCorrectness.ALWAYS, None, False, True),
         (ShowCorrectness.ALWAYS, None, True, True),
-        (ShowCorrectness.ALWAYS, 'yesterday', False, True),
-        (ShowCorrectness.ALWAYS, 'yesterday', True, True),
-        (ShowCorrectness.ALWAYS, 'tomorrow', False, True),
-        (ShowCorrectness.ALWAYS, 'tomorrow', True, True),
+        (ShowCorrectness.ALWAYS, YESTERDAY, False, True),
+        (ShowCorrectness.ALWAYS, YESTERDAY, True, True),
+        (ShowCorrectness.ALWAYS, TOMORROW, False, True),
+        (ShowCorrectness.ALWAYS, TOMORROW, True, True),
         (ShowCorrectness.NEVER, None, False, False),
         (ShowCorrectness.NEVER, None, True, False),
-        (ShowCorrectness.NEVER, 'yesterday', False, False),
-        (ShowCorrectness.NEVER, 'yesterday', True, False),
-        (ShowCorrectness.NEVER, 'tomorrow', False, False),
-        (ShowCorrectness.NEVER, 'tomorrow', True, False),
+        (ShowCorrectness.NEVER, YESTERDAY, False, False),
+        (ShowCorrectness.NEVER, YESTERDAY, True, False),
+        (ShowCorrectness.NEVER, TOMORROW, False, False),
+        (ShowCorrectness.NEVER, TOMORROW, True, False),
         (ShowCorrectness.PAST_DUE, None, False, True),
         (ShowCorrectness.PAST_DUE, None, True, True),
-        (ShowCorrectness.PAST_DUE, 'yesterday', False, True),
-        (ShowCorrectness.PAST_DUE, 'yesterday', True, True),
-        (ShowCorrectness.PAST_DUE, 'tomorrow', False, False),
-        (ShowCorrectness.PAST_DUE, 'tomorrow', True, False),
+        (ShowCorrectness.PAST_DUE, YESTERDAY, False, True),
+        (ShowCorrectness.PAST_DUE, YESTERDAY, True, True),
+        (ShowCorrectness.PAST_DUE, TOMORROW, False, False),
+        (ShowCorrectness.PAST_DUE, TOMORROW, True, False),
     )
     @ddt.unpack
     def test_progress_page_hide_scores_from_learner(self, show_correctness, due_date, graded, show_grades):
@@ -1880,22 +1878,22 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         ('', None, True, True),
         (ShowCorrectness.ALWAYS, None, False, True),
         (ShowCorrectness.ALWAYS, None, True, True),
-        (ShowCorrectness.ALWAYS, 'yesterday', False, True),
-        (ShowCorrectness.ALWAYS, 'yesterday', True, True),
-        (ShowCorrectness.ALWAYS, 'tomorrow', False, True),
-        (ShowCorrectness.ALWAYS, 'tomorrow', True, True),
+        (ShowCorrectness.ALWAYS, YESTERDAY, False, True),
+        (ShowCorrectness.ALWAYS, YESTERDAY, True, True),
+        (ShowCorrectness.ALWAYS, TOMORROW, False, True),
+        (ShowCorrectness.ALWAYS, TOMORROW, True, True),
         (ShowCorrectness.NEVER, None, False, False),
         (ShowCorrectness.NEVER, None, True, False),
-        (ShowCorrectness.NEVER, 'yesterday', False, False),
-        (ShowCorrectness.NEVER, 'yesterday', True, False),
-        (ShowCorrectness.NEVER, 'tomorrow', False, False),
-        (ShowCorrectness.NEVER, 'tomorrow', True, False),
+        (ShowCorrectness.NEVER, YESTERDAY, False, False),
+        (ShowCorrectness.NEVER, YESTERDAY, True, False),
+        (ShowCorrectness.NEVER, TOMORROW, False, False),
+        (ShowCorrectness.NEVER, TOMORROW, True, False),
         (ShowCorrectness.PAST_DUE, None, False, True),
         (ShowCorrectness.PAST_DUE, None, True, True),
-        (ShowCorrectness.PAST_DUE, 'yesterday', False, True),
-        (ShowCorrectness.PAST_DUE, 'yesterday', True, True),
-        (ShowCorrectness.PAST_DUE, 'tomorrow', False, True),
-        (ShowCorrectness.PAST_DUE, 'tomorrow', True, True),
+        (ShowCorrectness.PAST_DUE, YESTERDAY, False, True),
+        (ShowCorrectness.PAST_DUE, YESTERDAY, True, True),
+        (ShowCorrectness.PAST_DUE, TOMORROW, False, True),
+        (ShowCorrectness.PAST_DUE, TOMORROW, True, True),
     )
     @ddt.unpack
     def test_progress_page_hide_scores_from_staff(self, show_correctness, due_date, graded, show_grades):
