@@ -711,6 +711,11 @@ class TestCourseGradeViewAsStaff(SharedModuleStoreTestCase):
     """
     Test scores and grades as viewed by staff and learners, for subsections with various show_correctness settings.
     """
+    NOW = datetime.datetime.now(pytz.UTC)
+    DAY_DELTA = datetime.timedelta(days=1)
+    YESTERDAY = NOW - DAY_DELTA
+    TOMORROW = NOW + DAY_DELTA
+
     def create_course(self, **subsection_metadata):
         self.course = CourseFactory.create()
         with self.store.bulk_operations(self.course.id):
@@ -759,21 +764,69 @@ class TestCourseGradeViewAsStaff(SharedModuleStoreTestCase):
         CourseEnrollment.enroll(self.request.user, self.course.id)
 
     @ddt.data(
-        (None, 2, 5, True, dict(passed=False, percent=0.4, grade=None)),
-        (None, 5, 5, True, dict(passed=True, percent=1, grade='Pass')),
-        (None, 2, 5, False, dict(passed=False, percent=0.4, grade=None)),
-        (None, 5, 5, False, dict(passed=True, percent=1, grade='Pass')),
+        # Grade is returned to staff and learner when show_correctness is ommitted, or ALWAYS
+        (dict(), False,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(), False,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
+        (dict(), True,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(), True,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), False,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), False,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), True,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), True,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
 
-        # Grade not returned if never show_correctness
-        (ShowCorrectness.NEVER, 2, 5, True, dict(passed=False, percent=0, grade=None)),
-        (ShowCorrectness.NEVER, 5, 5, True, dict(passed=False, percent=0, grade=None)),
-        (ShowCorrectness.NEVER, 2, 5, False, dict(passed=False, percent=0, grade=None)),
-        (ShowCorrectness.NEVER, 5, 5, False, dict(passed=False, percent=0, grade=None)),
+        # No grade returned to staff or learner when show_correctness=NEVER
+        (dict(show_correctness=ShowCorrectness.NEVER), False,
+         2, 5, dict(grade=None, percent=0.0, passed=False)),
+        (dict(show_correctness=ShowCorrectness.NEVER), False,
+         5, 5, dict(grade=None, percent=0.0, passed=False)),
+        (dict(show_correctness=ShowCorrectness.NEVER), True,
+         2, 5, dict(grade=None, percent=0.0, passed=False)),
+        (dict(show_correctness=ShowCorrectness.NEVER), True,
+         5, 5, dict(grade=None, percent=0.0, passed=False)),
+
+        # No grade returned to learner when show_correctness=PAST_DUE, and due date is in the future
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), False,
+         2, 5, dict(grade=None, percent=0.0, passed=False)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), False,
+         5, 5, dict(grade=None, percent=0.0, passed=False)),
+
+        # Grade is returned to learner when show_correctness=PAST_DUE, and due date has passed, or is not set.
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), False,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), False,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), False,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), False,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
+
+        # Grade is returned to staff when show_correctness=PAST_DUE, for all due dates
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), True,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), True,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), True,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), True,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), True,
+         2, 5, dict(grade=None, percent=0.4, passed=False)),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), True,
+         5, 5, dict(grade='Pass', percent=1, passed=True)),
     )
     @ddt.unpack
-    def test_view_as_staff(self, show_correctness, score, max_value, view_as_staff, expected):
+    def test_view_as_staff(self, metadata, view_as_staff, score, max_value, expected):
 
-        self.create_course(show_correctness=show_correctness)
+        self.create_course(**metadata)
+
         answer_problem(self.course, self.request, self.problem, score=score, max_value=max_value)
 
         course_grade = CourseGradeFactory().create(self.request.user, self.course)
