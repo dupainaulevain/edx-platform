@@ -365,47 +365,19 @@ class ShowCorrectnessTest(unittest.TestCase):
 
     @ddt.data(
         # Correctness not visible to learners if due date in the future
-        (ShowCorrectness.PAST_DUE,
-         'tomorrow',
-         False,
-         False,
-        ),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', False, False),
         # Correctness is visible to learners if due date in the past
-        (ShowCorrectness.PAST_DUE,
-         'yesterday',
-         False,
-         True,
-        ),
+        (ShowCorrectness.PAST_DUE, 'yesterday', False, True),
         # Correctness is visible to learners if due date in the past (just)
-        (ShowCorrectness.PAST_DUE,
-         'today',
-         False,
-         True,
-        ),
+        (ShowCorrectness.PAST_DUE, 'today', False, True),
         # Correctness is visible to learners if there is no due date
-        (ShowCorrectness.PAST_DUE,
-         None,
-         False,
-         True,
-        ),
+        (ShowCorrectness.PAST_DUE, None, False, True),
         # Correctness is visible to staff if due date in the future
-        (ShowCorrectness.PAST_DUE,
-         'tomorrow',
-         True,
-         True,
-        ),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', True, True),
         # Correctness is visible to staff if due date in the past
-        (ShowCorrectness.PAST_DUE,
-         'yesterday',
-         True,
-         True,
-        ),
+        (ShowCorrectness.PAST_DUE, 'yesterday', True, True),
         # Correctness is visible to staff if there is no due date
-        (ShowCorrectness.PAST_DUE,
-         None,
-         True,
-         True,
-        ),
+        (ShowCorrectness.PAST_DUE, None, True, True),
     )
     @ddt.unpack
     def test_show_correctness_past_due(self, show_correctness, due_date_str, has_staff_access, expected_result):

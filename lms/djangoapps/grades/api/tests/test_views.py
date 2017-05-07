@@ -333,9 +333,9 @@ class ShowCorrectnessGradeViewTest(BaseGradeViewTest):
 
     @ddt.data(
         # Grade is returned to staff and learner when show_correctness is ommitted, or ALWAYS
-        (dict(), 'student', 
+        (dict(), 'student',
          (2, 5), dict(letter_grade=None, percent=0.4, passed=False)),
-        (dict(), 'student', 
+        (dict(), 'student',
          (5, 5), dict(letter_grade='Pass', percent=1, 'passed': True)),
         (dict(), 'staff',
          (2, 5), dict(letter_grade=None, percent=0.4, 'passed': False)),
@@ -345,7 +345,7 @@ class ShowCorrectnessGradeViewTest(BaseGradeViewTest):
          (2, 5), dict(letter_grade=None, percent=0.4, 'passed': False)),
         (dict(), 'global_staff',
          (5, 5), dict(letter_grade='Pass', percent=1, 'passed': True)),
-        (dict(show_correctness=ShowCorrectness.ALWAYS), 'student', 
+        (dict(show_correctness=ShowCorrectness.ALWAYS), 'student',
          (2, 5), dict(letter_grade=None, percent=0.4, 'passed': False)),
         (dict(show_correctness=ShowCorrectness.ALWAYS), 'student',
          (5, 5), dict(letter_grade='Pass', percent=1, 'passed': True)),

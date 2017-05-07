@@ -1759,7 +1759,7 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         """
 
         expected_score = "<dd>{score}/{max_score}</dd>".format(score=score, max_score=max_score)
-        percent = score/float(max_score)
+        percent = score / float(max_score)
         graded_data = [dict(color='#b72121', label='Homework',
                             data=[[1, percent], [2, 0.0], [3.25, float(avg)]])]
         if percent > 0:

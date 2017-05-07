@@ -222,7 +222,7 @@ class CourseGrade(CourseGradeBase):
                 subsection_grade.graded_total.earned = 0
                 subsection_grade.all_total.earned = 0
 
-        # If the "show all grades" flag has changed: 
+        # If the "show all grades" flag has changed
         # * invalidate the cached grader result, and
         # * the data used to calculate the grader result.
         if show_all_grades != self._show_all_grades:
