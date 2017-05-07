@@ -39,8 +39,8 @@ class GradesTransformer(BlockStructureTransformer):
     WRITE_VERSION = 4
     READ_VERSION = 4
     FIELDS_TO_COLLECT = [
-      u'due', u'format', u'graded', u'has_score', u'weight', u'course_version', u'subtree_edited_on',
-      u'show_correctness',
+        u'due', u'format', u'graded', u'has_score', u'weight', u'course_version', u'subtree_edited_on',
+        u'show_correctness',
     ]
 
     EXPLICIT_GRADED_FIELD_NAME = 'explicit_graded'

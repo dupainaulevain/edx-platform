@@ -48,16 +48,11 @@ class SubsectionGradeBase(object):
         )
         return self.all_total.attempted
 
-    @property
-    def correctness_available(self):
+    def show_grades(self, has_staff_access):
         """
-        Returns True if correctness (and therefore subsection scores)
-        are currently available to the learner.
-
-        Note that some uses of SubsectionGrades (e.g. when a staff user is viewing grades) may choose to ignore this
-        setting, and show grades regardless.
+        Returns whether subsection scores are currently available to users with or without staff access.
         """
-        return ShowCorrectness.correctness_available(self.show_correctness, self.due)
+        return ShowCorrectness.correctness_available(self.show_correctness, self.due, has_staff_access)
 
 
 class ZeroSubsectionGrade(SubsectionGradeBase):
