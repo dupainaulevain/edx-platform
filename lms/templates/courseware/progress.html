@@ -160,18 +160,18 @@ from django.utils.http import urlquote_plus
                                           earned = section.all_total.earned
                                           total = section.all_total.possible
                                           percentageString = ''
-                                          if earned > 0 and total > 0:
-                                            percentageString = "{0:.0%}".format( float(earned)/total)
+                                          if earned > 0 or total > 0:
+                                            percentageString = "{0:.0%}".format(float(earned)/total)
 
                                             subsection_grade_long = _("{earned} of {total} possible points").format(earned='{:.3n}'.format(float(earned)), total='{:.3n}'.format(float(total)))
-                                            subsection_grade_short = "({0:.3n}/{1:.3n}) {2}".format( float(earned), float(total), percentageString )
+                                            subsection_grade_short = "({0:.3n}/{1:.3n}) {2}".format(float(earned), float(total), percentageString)
                                         %>
                                         <h4 class="hd hd-4">
                                             <a href="${reverse('courseware_section', kwargs=dict(course_id=course.id.to_deprecated_string(), chapter=chapter['url_name'], section=section.url_name))}">
                                                 ${ section.display_name}
-                                                <span class="sr">${subsection_grade_long}</span>
+                                                <span class="sr"> ${subsection_grade_long}</span>
                                             </a>
-                                            <span>${subsection_grade_short}</span>
+                                            <span> ${subsection_grade_short}</span>
                                         </h4>
                                         <p>
                                             %if section.format is not None:
