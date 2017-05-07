@@ -186,6 +186,11 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
 
         prep_course_for_grading(course, request)
         course_grade = CourseGradeFactory().create(grade_user, course)
+
+        # Update the the course grade to recalculate grades for learner vs staff view
+        has_staff_access = has_access(request.user, CourseStaffRole.ROLE, course)
+        course_grade.update(view_as_staff=has_staff_access)
+
         return Response([{
             'username': grade_user.username,
             'course_key': course_id,

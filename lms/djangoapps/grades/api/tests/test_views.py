@@ -1,7 +1,7 @@
 """
 Tests for the views
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 import ddt
 from django.core.urlresolvers import reverse
 from mock import patch
@@ -16,15 +16,16 @@ from edx_oauth2_provider.tests.factories import AccessTokenFactory, ClientFactor
 from lms.djangoapps.courseware.tests.factories import GlobalStaffFactory, StaffFactory
 from lms.djangoapps.grades.tests.utils import mock_get_score
 from student.tests.factories import CourseEnrollmentFactory, UserFactory
+from xmodule.graders import ShowCorrectness
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase, TEST_DATA_SPLIT_MODULESTORE
 
 
 @ddt.ddt
-class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
+class BaseGradeViewTest(SharedModuleStoreTestCase, APITestCase):
     """
-    Tests for the Current Grade View
+    Base class for the Current Grade View tests
 
     The following tests assume that the grading policy is the edX default one:
     {
@@ -65,9 +66,10 @@ class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
     MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
 
     @classmethod
-    def setUpClass(cls):
-        super(CurrentGradeViewTest, cls).setUpClass()
-
+    def create_course(cls, **subsection_options):
+        """
+        Create cls.course with the given subsection options.
+        """
         cls.course = CourseFactory.create(display_name='test course', run="Testing_course")
         with cls.store.bulk_operations(cls.course.id):
 
@@ -87,6 +89,7 @@ class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
                         display_name='Sequential {} {}'.format(grading_type, num),
                         format=grading_type,
                         graded=True,
+                        **subsection_options
                     )
                     vertical = ItemFactory.create(
                         category='vertical',
@@ -101,12 +104,6 @@ class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
 
         cls.course_key = cls.course.id
 
-        cls.password = 'test'
-        cls.student = UserFactory(username='dummy', password=cls.password)
-        cls.other_student = UserFactory(username='foo', password=cls.password)
-        cls.other_user = UserFactory(username='bar', password=cls.password)
-        cls.staff = StaffFactory(course_key=cls.course.id, password=cls.password)
-        cls.global_staff = GlobalStaffFactory.create()
         date = datetime(2013, 1, 22, tzinfo=UTC)
         for user in (cls.student, cls.other_student, ):
             CourseEnrollmentFactory(
@@ -114,11 +111,25 @@ class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
                 user=user,
                 created=date,
             )
+        cls.staff = StaffFactory(course_key=cls.course.id, password=cls.password)
 
+    @classmethod
+    def setUpClass(cls):
+        """
+        Create the course and users used by the Grades API tests.
+        """
+        super(BaseGradeViewTest, cls).setUpClass()
+        cls.password = 'test'
+        cls.student = UserFactory(username='dummy', password=cls.password)
+        cls.other_student = UserFactory(username='foo', password=cls.password)
+        cls.other_user = UserFactory(username='bar', password=cls.password)
+        cls.global_staff = GlobalStaffFactory.create()
         cls.namespaced_url = 'grades_api:user_grade_detail'
 
+        cls.create_course()
+
     def setUp(self):
-        super(CurrentGradeViewTest, self).setUp()
+        super(BaseGradeViewTest, self).setUp()
         self.client.login(username=self.student.username, password=self.password)
 
     def get_url(self, username):
@@ -136,6 +147,12 @@ class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
             query_string = '?' + urlencode(dict(username=username))
         return base_url + query_string
 
+
+@ddt.ddt
+class CurrentGradeViewTest(BaseGradeViewTest):
+    """
+    Tests for the Current Grade View
+    """
     def test_anonymous(self):
         """
         Test that an anonymous user cannot access the API and an error is received.
@@ -301,6 +318,122 @@ class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
             'course_key': str(self.course_key),
         }
         expected_data.update(result)
+        self.assertEqual(resp.data, [expected_data])  # pylint: disable=no-member
+
+
+@ddt.ddt
+class ShowCorrectnessGradeViewTest(BaseGradeViewTest):
+    """
+    Tests the Current Grade View with various subsection.show_correctness states and user access
+    """
+    NOW = datetime.now(UTC)
+    DAY_DELTA = timedelta(days=1)
+    YESTERDAY = NOW - DAY_DELTA
+    TOMORROW = NOW + DAY_DELTA
+
+    @ddt.data(
+        # Grade is returned to staff and learner when show_correctness is ommitted, or ALWAYS
+        (dict(), 'student', 
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(), 'student', 
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(), 'staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(), 'staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(), 'global_staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(), 'global_staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), 'student', 
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), 'student',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), 'staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), 'staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), 'global_staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.ALWAYS), 'global_staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+
+        # No grade returned to staff or learner when show_correctness=NEVER
+        (dict(show_correctness=ShowCorrectness.NEVER), 'student',
+         (2, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.NEVER), 'student',
+         (5, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.NEVER), 'staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.NEVER), 'staff',
+         (5, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.NEVER), 'global_staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.NEVER), 'global_staff',
+         (5, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+
+        # No grade returned to learner when show_correctness=PAST_DUE, and due date is in the future
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), 'student',
+         (2, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), 'student',
+         (5, 5), {'letter_grade': None, 'percent': 0.0, 'passed': False}),
+
+        # Grade is returned to learner when show_correctness=PAST_DUE, and due date has passed, or is not set.
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), 'student',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), 'student',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), 'student',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), 'student',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+
+        # Grade is returned to staff when show_correctness=PAST_DUE, for all due dates
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), 'staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), 'staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), 'global_staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), 'global_staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), 'staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), 'staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), 'global_staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), 'global_staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), 'staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), 'staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), 'global_staff',
+         (2, 5), {'letter_grade': None, 'percent': 0.4, 'passed': False}),
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), 'global_staff',
+         (5, 5), {'letter_grade': 'Pass', 'percent': 1, 'passed': True}),
+    )
+    @ddt.unpack
+    def test_grade(self, metadata, user, grade, expected_result):
+        """
+        Test that the course grade respects the subsection show_correctness settings.
+        """
+        self.create_course(metadata=metadata)
+
+        username = getattr(self, user).username
+        self.client.logout()
+        self.client.login(username=username, password=self.password)
+
+        with mock_get_score(*grade):
+            resp = self.client.get(self.get_url(self.student.username))
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        expected_data = {
+            'username': self.student.username,
+            'course_key': str(self.course_key),
+        }
+        expected_data.update(expected_result)
         self.assertEqual(resp.data, [expected_data])  # pylint: disable=no-member
 
 
