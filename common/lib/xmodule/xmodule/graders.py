@@ -11,7 +11,7 @@ import inspect
 import logging
 import random
 import sys
-from pytz import utc
+from pytz import UTC
 
 from contracts import contract
 
@@ -481,20 +481,20 @@ class ShowCorrectness(object):
     NEVER = "never"
 
     @classmethod
-    def correctness_available(cls, show_correctness, due_date, has_staff_access=False):
+    def correctness_available(cls, show_correctness='', due_date=None, has_staff_access=False):
         """
-        Is correctness available now?
+        Returns whether correctness is available now, for the given attributes.
         """
         if show_correctness == cls.NEVER:
             return False
         elif has_staff_access:
-            # This is after the 'never' check because admins can see correctness
+            # This is after the 'never' check because course staff can see correctness
             # unless the sequence/problem explicitly prevents it
             return True
         elif show_correctness == cls.PAST_DUE:
             # Is it now past the due date?
-            return (due_date is not None and
-                datetime.now(utc) > due_date)
+            return (due_date is None or
+                    due_date < datetime.now(UTC))
 
         # else: show_correctness == cls.ALWAYS
         return True
