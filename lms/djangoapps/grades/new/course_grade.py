@@ -38,11 +38,9 @@ class CourseGradeBase(object):
         """
         return False
 
-    @lazy
-    def graded_subsections_by_format(self):
+    def graded_subsections(self):
         """
-        Returns grades for the subsections in the course in
-        a dict keyed by subsection format types.
+        Generates a list of graded subsections in the course
         """
         subsections_by_format = defaultdict(OrderedDict)
         for chapter in self.chapter_grades.itervalues():
@@ -50,7 +48,17 @@ class CourseGradeBase(object):
                 if subsection_grade.graded:
                     graded_total = subsection_grade.graded_total
                     if graded_total.possible > 0:
-                        subsections_by_format[subsection_grade.format][subsection_grade.location] = subsection_grade
+                        yield subsection_grade
+
+    @lazy
+    def graded_subsections_by_format(self):
+        """
+        Returns grades for the subsections in the course in
+        a dict keyed by subsection format types.
+        """
+        subsections_by_format = defaultdict(OrderedDict)
+        for subsection_grade in self.graded_subsections():
+            subsections_by_format[subsection_grade.format][subsection_grade.location] = subsection_grade
         return subsections_by_format
 
     @lazy
@@ -193,10 +201,45 @@ class CourseGrade(CourseGradeBase):
         super(CourseGrade, self).__init__(user, course_data, *args, **kwargs)
         self._subsection_grade_factory = SubsectionGradeFactory(user, course_data=course_data)
 
-    def update(self):
+        self._view_as_staff = True
+        self._show_all_grades = True
+
+    @property
+    def view_as_staff(self):
+        return self._view_as_staff
+
+    @view_as_staff.setter
+    def view_as_staff(self, view_as_staff):
+        self._view_as_staff = view_as_staff
+
+        # Iterate through the graded subsections to see whether this access change affects the grade calculations
+        show_all_grades = self._show_all_grades
+        for subsection_grade in self.graded_subsections():
+
+            # Zero out all the earned grades on subsections where grades are hidden
+            if not subsection_grade.show_grades(has_staff_access=view_as_staff):
+                show_all_grades = False
+                subsection_grade.graded_total.earned = 0
+                subsection_grade.all_total.earned = 0
+
+        # If the "show all grades" flag has changed: 
+        # * invalidate the cached grader result, and
+        # * the data used to calculate the grader result.
+        if show_all_grades != self._show_all_grades:
+            self._show_all_grades = show_all_grades
+
+            lazy.invalidate(self, 'grader_result')
+            lazy.invalidate(self, 'graded_subsections_by_format')
+
+    def update(self, view_as_staff=True):
         """
         Updates the grade for the course.
+
+        Pass view_as_staff=False if the grades are to be viewed by a learner.
         """
+        self.view_as_staff = view_as_staff
+
+        # Update the course grade data
         grade_cutoffs = self.course_data.course.grade_cutoffs
         self.percent = self._compute_percent(self.grader_result)
         self.letter_grade = self._compute_letter_grade(grade_cutoffs, self.percent)
