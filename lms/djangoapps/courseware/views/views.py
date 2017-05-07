@@ -873,6 +873,9 @@ def _progress(request, course_key, student_id):
     # student instead of request.user in the rest of the function.
 
     course_grade = CourseGradeFactory().create(student, course)
+
+    # Update the the course grade to recalculate grades for learner vs staff view
+    course_grade.update(view_as_staff=staff_access)
     courseware_summary = course_grade.chapter_grades.values()
     grade_summary = course_grade.summary
 

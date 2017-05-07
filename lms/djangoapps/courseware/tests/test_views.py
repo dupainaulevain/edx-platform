@@ -29,6 +29,9 @@ from xblock.core import XBlock
 from xblock.fields import String, Scope
 from xblock.fragment import Fragment
 
+from capa.tests.response_xml_factory import MultipleChoiceResponseXMLFactory
+from courseware.model_data import FieldDataCache
+from courseware.module_render import get_module
 import courseware.views.views as views
 import shoppingcart
 from certificates import api as certs_api
@@ -57,6 +60,7 @@ from openedx.core.djangoapps.credit.api import set_credit_requirements
 from openedx.core.djangoapps.credit.models import CreditCourse, CreditProvider
 from openedx.core.djangoapps.programs.tests.mixins import ProgramsApiConfigMixin
 from openedx.core.djangoapps.self_paced.models import SelfPacedConfiguration
+from openedx.core.djangolib.testing.utils import get_mock_request
 from openedx.core.lib.gating import api as gating_api
 from openedx.features.enterprise_support.tests.mixins.enterprise import EnterpriseTestConsentRequired
 from student.models import CourseEnrollment
@@ -64,6 +68,7 @@ from student.tests.factories import AdminFactory, UserFactory, CourseEnrollmentF
 from util.tests.test_date_utils import fake_ugettext, fake_pgettext
 from util.url import reload_django_url_config
 from util.views import ensure_valid_course_key
+from xmodule.graders import ShowCorrectness
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import TEST_DATA_MIXED_MODULESTORE
@@ -1169,29 +1174,32 @@ class StartDateTests(ModuleStoreTestCase):
 # pylint: disable=protected-access, no-member
 @attr(shard=1)
 @override_settings(ENABLE_ENTERPRISE_INTEGRATION=False)
-@ddt.ddt
-class ProgressPageTests(ModuleStoreTestCase):
+class ProgressPageBaseTests(ModuleStoreTestCase):
     """
-    Tests that verify that the progress page works correctly.
+    Base class for progress page tests.
     """
 
     ENABLED_CACHES = ['default', 'mongo_modulestore_inheritance', 'loc_cache']
     ENABLED_SIGNALS = ['course_published']
 
     def setUp(self):
-        super(ProgressPageTests, self).setUp()
+        super(ProgressPageBaseTests, self).setUp()
         self.user = UserFactory.create()
         self.assertTrue(self.client.login(username=self.user.username, password='test'))
 
         self.setup_course()
 
-    def setup_course(self, **options):
+    def create_course(self, **options):
         """Create the test course."""
         self.course = CourseFactory.create(
             start=datetime(2013, 9, 16, 7, 17, 28),
             grade_cutoffs={u'çü†øƒƒ': 0.75, 'Pass': 0.5},
             **options
         )
+
+    def setup_course(self, **course_options):
+        """Create the test course and content, and enroll the user."""
+        self.create_course(**course_options)
         with self.store.bulk_operations(self.course.id):
             self.chapter = ItemFactory.create(category='chapter', parent_location=self.course.location)
             self.section = ItemFactory.create(category='sequential', parent_location=self.chapter.location)
@@ -1201,7 +1209,7 @@ class ProgressPageTests(ModuleStoreTestCase):
 
     def _get_progress_page(self, expected_status_code=200):
         """
-        Gets the progress page for the user in the course.
+        Gets the progress page for the currently logged-in user.
         """
         resp = self.client.get(
             reverse('progress', args=[unicode(self.course.id)])
@@ -1218,6 +1226,14 @@ class ProgressPageTests(ModuleStoreTestCase):
         )
         self.assertEqual(resp.status_code, expected_status_code)
         return resp
+
+
+# pylint: disable=protected-access, no-member
+@ddt.ddt
+class ProgressPageTests(ProgressPageBaseTests):
+    """
+    Tests that verify that the progress page works correctly.
+    """
 
     @ddt.data('"><script>alert(1)</script>', '<script>alert(1)</script>', '</script><script>alert(1)</script>')
     def test_progress_page_xss_prevent(self, malicious_code):
@@ -1651,6 +1667,257 @@ class ProgressPageTests(ModuleStoreTestCase):
             'download_url': uuid,
             'uuid': download_url,
         }
+
+
+# pylint: disable=protected-access, no-member
+@ddt.ddt
+class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
+    """
+    Tests that verify that the progress page works correctly when displaying subsections where correctness is hidden.
+    """
+    def setUp(self):
+        super(ProgressPageShowCorrectnessTests, self).setUp()
+        self.staff_user = UserFactory.create(is_staff=True)
+
+        now = datetime.now(UTC)
+        day_delta = timedelta(days=1)
+        self.yesterday = now - day_delta
+        self.tomorrow = now + day_delta
+
+    def setup_course(self, show_correctness='', due_date=None, graded=False, add_problem=True, **course_options):
+        """
+        Set up course with a subsection with the given show_correctness, due_date, and graded settings.
+        """
+        # Use a simple grading policy
+        course_options['grading_policy'] = {
+            "GRADER": [{
+                "type": "Homework",
+                "min_count": 2,
+                "drop_count": 0,
+                "short_label": "HW",
+                "weight": 1.0
+            }],
+            "GRADE_CUTOFFS": {
+                'A': .9,
+                'B': .33
+            }
+        }
+        self.create_course(**course_options)
+
+        metadata = dict(
+            show_correctness=show_correctness,
+        )
+        if due_date is None:
+            metadata['due'] = None
+        else:
+            metadata['due'] = getattr(self, due_date)
+
+        if graded:
+            metadata['graded'] = True
+            metadata['format'] = 'Homework'
+
+        with self.store.bulk_operations(self.course.id):
+            self.chapter = ItemFactory.create(category='chapter', parent_location=self.course.location,
+                                              display_name="Section 1")
+            self.section = ItemFactory.create(category='sequential', parent_location=self.chapter.location,
+                                              display_name="Subsection 1", metadata=metadata)
+            self.vertical = ItemFactory.create(category='vertical', parent_location=self.section.location)
+            if add_problem:
+                problem_xml = MultipleChoiceResponseXMLFactory().build_xml(
+                    question_text='The correct answer is Choice 1',
+                    choices=[True, False],
+                    choice_names=['choice_0', 'choice_1']
+                )
+                self.problem = ItemFactory.create(category='problem', parent_location=self.vertical.location,
+                                                  data=problem_xml, display_name='Problem 1')
+
+        CourseEnrollmentFactory(user=self.user, course_id=self.course.id, mode=CourseMode.HONOR)
+
+    def answer_problem(self, value=1, max_value=1):
+        """
+        Make the user answer the problems.
+        """
+        request = get_mock_request(self.user)
+        grade_dict = {'value': value, 'max_value': max_value, 'user_id': self.user.id}
+        field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
+            self.course.id,
+            self.user,
+            self.course,
+            depth=2
+        )
+        # pylint: disable=protected-access
+        module = get_module(
+            self.user,
+            request,
+            self.problem.scope_ids.usage_id,
+            field_data_cache,
+        )._xmodule
+        module.system.publish(self.problem, 'grade', grade_dict)
+
+    def assert_progress_page_show_grades(self, response, show_correctness, due_date, graded,
+                                         show_grades, score, max_score, avg):
+        """
+        Ensures that grades and scores are shown or not shown on the progress page as required.
+        """
+
+        expected_score = "<dd>{score}/{max_score}</dd>".format(score=score, max_score=max_score)
+        percent = score/float(max_score)
+        graded_data = [dict(color='#b72121', label='Homework',
+                            data=[[1, percent], [2, 0.0], [3.25, float(avg)]])]
+        if percent > 0:
+            graded_data.append(dict(color='#b72121', data=[[4.75, float(avg)]],
+                                    label="Homework-grade_breakdown"))
+
+        ungraded_data = [dict(color='#b72121', label='Homework',
+                              data=[[1, 0.0], [2, 0.0], [3.25, 0.0]])]
+
+        if show_grades:
+            # If grades are shown, we should be able to see the current problem scores.
+            self.assertIn(expected_score, response.content)
+
+            if graded:
+                expected_summary_text = "Problem Scores:"
+                expected_data = graded_data
+            else:
+                expected_summary_text = "Practice Scores:"
+                expected_data = ungraded_data
+
+        else:
+            # If grades are hidden, we should not be able to see the current problem scores.
+            self.assertNotIn(expected_score, response.content)
+
+            if graded:
+                expected_summary_text = "Problem scores are hidden"
+            else:
+                expected_summary_text = "Practice scores are hidden"
+
+            if show_correctness == ShowCorrectness.PAST_DUE and due_date:
+                expected_summary_text += ' until the due date.'
+            else:
+                expected_summary_text += '.'
+
+            # Graph should not show graded data
+            expected_data = ungraded_data
+
+        # Ensure that expected text is present
+        self.assertIn(expected_summary_text, response.content)
+
+        # Ensure the graph's JSON data shows/hides grades too
+        self.assertIn(json.dumps(expected_data, sort_keys=True), response.content)
+
+    @ddt.data(
+        ('', None, False),
+        ('', None, True),
+        (ShowCorrectness.ALWAYS, None, False),
+        (ShowCorrectness.ALWAYS, None, True),
+        (ShowCorrectness.ALWAYS, 'yesterday', False),
+        (ShowCorrectness.ALWAYS, 'yesterday', True),
+        (ShowCorrectness.ALWAYS, 'tomorrow', False),
+        (ShowCorrectness.ALWAYS, 'tomorrow', True),
+        (ShowCorrectness.PAST_DUE, None, False),
+        (ShowCorrectness.PAST_DUE, None, True),
+        (ShowCorrectness.NEVER, None, False),
+        (ShowCorrectness.NEVER, None, True),
+        (ShowCorrectness.PAST_DUE, 'yesterday', False),
+        (ShowCorrectness.PAST_DUE, 'yesterday', True),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', False),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', True),
+    )
+    @ddt.unpack
+    def test_progress_page_no_problem_scores(self, show_correctness, due_date, graded):
+        """
+        Test that "no problem scores are present" for a course with no problems in, regardless of the various show correctness settings
+        """
+        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded, add_problem=False)
+        resp = self._get_progress_page()
+
+        # Test that no problem scores are present
+        self.assertIn('No problem scores in this section', resp.content)
+
+    @ddt.data(
+        ('', None, False, True),
+        ('', None, True, True),
+        (ShowCorrectness.ALWAYS, None, False, True),
+        (ShowCorrectness.ALWAYS, None, True, True),
+        (ShowCorrectness.ALWAYS, 'yesterday', False, True),
+        (ShowCorrectness.ALWAYS, 'yesterday', True, True),
+        (ShowCorrectness.ALWAYS, 'tomorrow', False, True),
+        (ShowCorrectness.ALWAYS, 'tomorrow', True, True),
+        (ShowCorrectness.NEVER, None, False, False),
+        (ShowCorrectness.NEVER, None, True, False),
+        (ShowCorrectness.NEVER, 'yesterday', False, False),
+        (ShowCorrectness.NEVER, 'yesterday', True, False),
+        (ShowCorrectness.NEVER, 'tomorrow', False, False),
+        (ShowCorrectness.NEVER, 'tomorrow', True, False),
+        (ShowCorrectness.PAST_DUE, None, False, True),
+        (ShowCorrectness.PAST_DUE, None, True, True),
+        (ShowCorrectness.PAST_DUE, 'yesterday', False, True),
+        (ShowCorrectness.PAST_DUE, 'yesterday', True, True),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', False, False),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', True, False),
+    )
+    @ddt.unpack
+    def test_progress_page_hide_scores_from_learner(self, show_correctness, due_date, graded, show_grades):
+        """
+        Test that problem scores are hidden on progress page when correctness is not available to the learner.
+        """
+        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded, add_problem=True)
+        resp = self._get_progress_page()
+
+        # Ensure that expected text is present
+        self.assert_progress_page_show_grades(resp, show_correctness, due_date, graded, show_grades, 0, 1, 0)
+
+        # Submit answers to the problem, and re-fetch the progress page
+        self.answer_problem()
+
+        resp = self._get_progress_page()
+
+        # Test that the expected text is still present.
+        self.assert_progress_page_show_grades(resp, show_correctness, due_date, graded, show_grades, 1, 1, .5)
+
+    @ddt.data(
+        ('', None, False, True),
+        ('', None, True, True),
+        (ShowCorrectness.ALWAYS, None, False, True),
+        (ShowCorrectness.ALWAYS, None, True, True),
+        (ShowCorrectness.ALWAYS, 'yesterday', False, True),
+        (ShowCorrectness.ALWAYS, 'yesterday', True, True),
+        (ShowCorrectness.ALWAYS, 'tomorrow', False, True),
+        (ShowCorrectness.ALWAYS, 'tomorrow', True, True),
+        (ShowCorrectness.NEVER, None, False, False),
+        (ShowCorrectness.NEVER, None, True, False),
+        (ShowCorrectness.NEVER, 'yesterday', False, False),
+        (ShowCorrectness.NEVER, 'yesterday', True, False),
+        (ShowCorrectness.NEVER, 'tomorrow', False, False),
+        (ShowCorrectness.NEVER, 'tomorrow', True, False),
+        (ShowCorrectness.PAST_DUE, None, False, True),
+        (ShowCorrectness.PAST_DUE, None, True, True),
+        (ShowCorrectness.PAST_DUE, 'yesterday', False, True),
+        (ShowCorrectness.PAST_DUE, 'yesterday', True, True),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', False, True),
+        (ShowCorrectness.PAST_DUE, 'tomorrow', True, True),
+    )
+    @ddt.unpack
+    def test_progress_page_hide_scores_from_staff(self, show_correctness, due_date, graded, show_grades):
+        """
+        Test that problem scores are hidden from staff viewing a learner's progress page only if show_correctness=never
+        """
+        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded, add_problem=True)
+
+        # Login as a course staff user to view the student progress page.
+        self.client.login(username=self.staff_user.username, password='test')
+
+        resp = self._get_student_progress_page()
+
+        # Ensure that expected text is present
+        self.assert_progress_page_show_grades(resp, show_correctness, due_date, graded, show_grades, 0, 1, 0)
+
+        # Submit answers to the problem, and re-fetch the progress page
+        self.answer_problem()
+        resp = self._get_student_progress_page()
+
+        # Test that the expected text is still present.
+        self.assert_progress_page_show_grades(resp, show_correctness, due_date, graded, show_grades, 1, 1, .5)
 
 
 @attr(shard=1)

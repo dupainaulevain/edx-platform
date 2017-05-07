@@ -154,22 +154,24 @@ from django.utils.http import urlquote_plus
                                 %for section in chapter['sections']:
                                     <div>
                                         <%
-                                        earned = section.all_total.earned
-                                        total = section.all_total.possible
-                                        percentageString = "{0:.0%}".format( float(earned)/total) if earned > 0 and total > 0 else ""
+                                        subsection_grade_long = ""
+                                        subsection_grade_short = ""
+                                        if section.show_grades(staff_access):
+                                          earned = section.all_total.earned
+                                          total = section.all_total.possible
+                                          percentageString = ''
+                                          if earned > 0 and total > 0:
+                                            percentageString = "{0:.0%}".format( float(earned)/total)
+
+                                            subsection_grade_long = _("{earned} of {total} possible points").format(earned='{:.3n}'.format(float(earned)), total='{:.3n}'.format(float(total)))
+                                            subsection_grade_short = "({0:.3n}/{1:.3n}) {2}".format( float(earned), float(total), percentageString )
                                         %>
                                         <h4 class="hd hd-4">
                                             <a href="${reverse('courseware_section', kwargs=dict(course_id=course.id.to_deprecated_string(), chapter=chapter['url_name'], section=section.url_name))}">
                                                 ${ section.display_name}
-                                                %if total > 0 or earned > 0:
-                                                <span class="sr">
-                                                    ${_("{earned} of {total} possible points").format(earned='{:.3n}'.format(float(earned)), total='{:.3n}'.format(float(total)))}
-                                                </span>
-                                                %endif
+                                                <span class="sr">${subsection_grade_long}</span>
                                             </a>
-                                            %if total > 0 or earned > 0:
-                                            <span> ${"({0:.3n}/{1:.3n}) {2}".format( float(earned), float(total), percentageString )}</span>
-                                            %endif
+                                            <span>${subsection_grade_short}</span>
                                         </h4>
                                         <p>
                                             %if section.format is not None:
@@ -180,7 +182,7 @@ from django.utils.http import urlquote_plus
                                             %endif
                                         </p>
                                         %if len(section.problem_scores.values()) > 0:
-                                          %if section.correctness_available:
+                                          %if section.show_grades(staff_access):
                                           <dl class="scores">
                                               <dt class="hd hd-6">${ _("Problem Scores: ") if section.graded else _("Practice Scores: ")}</dt>
                                               %for score in section.problem_scores.values():
