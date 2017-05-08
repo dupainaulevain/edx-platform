@@ -189,7 +189,7 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
 
         # Update the the course grade to recalculate grades for learner vs staff view
         has_staff_access = has_access(request.user, CourseStaffRole.ROLE, course)
-        course_grade.update(view_as_staff=has_staff_access)
+        course_grade.update(view_as_learner=not has_staff_access)
 
         return Response([{
             'username': grade_user.username,

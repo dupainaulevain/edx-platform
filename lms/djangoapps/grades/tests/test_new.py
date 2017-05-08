@@ -793,44 +793,44 @@ class TestCourseGradeViewAsStaff(SharedModuleStoreTestCase):
          5, 5, dict(grade=None, percent=0.0, passed=False)),
 
         # No grade returned to learner when show_correctness=PAST_DUE, and due date is in the future
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), False,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), True,
          2, 5, dict(grade=None, percent=0.0, passed=False)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), False,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), True,
          5, 5, dict(grade=None, percent=0.0, passed=False)),
 
         # Grade is returned to learner when show_correctness=PAST_DUE, and due date has passed, or is not set.
-        (dict(show_correctness=ShowCorrectness.PAST_DUE), False,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), True,
          2, 5, dict(grade=None, percent=0.4, passed=False)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE), False,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), True,
          5, 5, dict(grade='Pass', percent=1, passed=True)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), False,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), True,
          2, 5, dict(grade=None, percent=0.4, passed=False)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), False,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), True,
          5, 5, dict(grade='Pass', percent=1, passed=True)),
 
         # Grade is returned to staff when show_correctness=PAST_DUE, for all due dates
-        (dict(show_correctness=ShowCorrectness.PAST_DUE), True,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), False,
          2, 5, dict(grade=None, percent=0.4, passed=False)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE), True,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE), False,
          5, 5, dict(grade='Pass', percent=1, passed=True)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), True,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), False,
          2, 5, dict(grade=None, percent=0.4, passed=False)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), True,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=YESTERDAY), False,
          5, 5, dict(grade='Pass', percent=1, passed=True)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), True,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), False,
          2, 5, dict(grade=None, percent=0.4, passed=False)),
-        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), True,
+        (dict(show_correctness=ShowCorrectness.PAST_DUE, due=TOMORROW), False,
          5, 5, dict(grade='Pass', percent=1, passed=True)),
     )
     @ddt.unpack
-    def test_view_as_staff(self, metadata, view_as_staff, score, max_value, expected):
+    def test_view_as_learner(self, metadata, view_as_learner, score, max_value, expected):
 
         self.create_course(**metadata)
 
         answer_problem(self.course, self.request, self.problem, score=score, max_value=max_value)
 
         course_grade = CourseGradeFactory().create(self.request.user, self.course)
-        course_grade.update(view_as_staff=view_as_staff)
+        course_grade.update(view_as_learner=view_as_learner)
 
         self.assertEqual(course_grade.passed, expected['passed'])
         self.assertEqual(course_grade.percent, expected['percent'])
@@ -846,13 +846,13 @@ class TestCourseGradeViewAsStaff(SharedModuleStoreTestCase):
         course_grade = CourseGradeFactory().create(self.request.user, self.course)
 
         # View course grades as staff - should show 100%
-        course_grade.update(view_as_staff=True)
+        course_grade.update(view_as_learner=False)
         self.assertEqual(course_grade.passed, True)
         self.assertEqual(course_grade.percent, 1)
         self.assertEqual(course_grade.letter_grade, 'Pass')
 
         # View course grades as learner - should show 0%
-        course_grade.update(view_as_staff=False)
+        course_grade.update(view_as_learner=True)
         self.assertEqual(course_grade.passed, False)
         self.assertEqual(course_grade.percent, 0)
         self.assertEqual(course_grade.letter_grade, None)

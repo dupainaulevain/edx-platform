@@ -207,23 +207,23 @@ class CourseGrade(CourseGradeBase):
         super(CourseGrade, self).__init__(user, course_data, *args, **kwargs)
         self._subsection_grade_factory = SubsectionGradeFactory(user, course_data=course_data)
 
-        self._view_as_staff = True
+        self._view_as_learner = False
         self._show_all_grades = True
 
     @property
-    def view_as_staff(self):
-        return self._view_as_staff
+    def view_as_learner(self):
+        return self._view_as_learner
 
-    @view_as_staff.setter
-    def view_as_staff(self, view_as_staff):
-        self._view_as_staff = view_as_staff
+    @view_as_learner.setter
+    def view_as_learner(self, view_as_learner):
+        self._view_as_learner = view_as_learner
 
         # Iterate through the graded subsections to see whether this access change affects the grade calculations
         show_all_grades = self._show_all_grades
         for subsection_grade in self.graded_subsections():
 
             # Zero out all the earned grades on subsections where grades are hidden
-            if not subsection_grade.show_grades(has_staff_access=view_as_staff):
+            if not subsection_grade.show_grades(has_staff_access=not view_as_learner):
                 show_all_grades = False
                 subsection_grade.graded_total.earned = 0
                 subsection_grade.all_total.earned = 0
@@ -237,13 +237,13 @@ class CourseGrade(CourseGradeBase):
             lazy.invalidate(self, 'grader_result')
             lazy.invalidate(self, 'graded_subsections_by_format')
 
-    def update(self, view_as_staff=True):
+    def update(self, view_as_learner=False):
         """
         Updates the grade for the course.
 
-        Pass view_as_staff=False if the grades are to be viewed by a learner.
+        Pass view_as_learner=True if the grades are to be viewed by a learner.
         """
-        self.view_as_staff = view_as_staff
+        self.view_as_learner = view_as_learner
 
         # Update the course grade data
         grade_cutoffs = self.course_data.course.grade_cutoffs

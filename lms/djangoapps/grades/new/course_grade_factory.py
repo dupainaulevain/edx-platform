@@ -162,7 +162,8 @@ class CourseGradeFactory(object):
 
         should_persist = (
             (not read_only) and  # TODO(TNL-6786) Remove the read_only boolean once all grades are back-filled.
-            (course_grade.view_as_staff) and  # Persist staff-facing grades only; learner grades may be incomplete.
+            (not course_grade.view_as_learner) and  # Persist staff-facing grades only (the default)
+                                                    # since learner grades may be incomplete.
             should_persist_grades(course_data.course_key) and
             (not waffle().is_enabled(WRITE_ONLY_IF_ENGAGED) or course_grade.attempted)
         )
