@@ -474,7 +474,7 @@ class ShowCorrectness(object):
     """
 
     """
-    Constants use to indicate when to show correctness
+    Constants used to indicate when to show correctness
     """
     ALWAYS = "always"
     PAST_DUE = "past_due"

@@ -358,29 +358,29 @@ class ShowCorrectnessTest(unittest.TestCase):
     @ddt.data(True, False)
     def test_show_correctness_never(self, has_staff_access):
         """
-        Test show_correctness="never" hides correctness from learners and course staff.
+        Test that show_correctness="never" hides correctness from learners and course staff.
         """
         self.assertFalse(ShowCorrectness.correctness_available(show_correctness=ShowCorrectness.NEVER,
                                                                has_staff_access=has_staff_access))
 
     @ddt.data(
         # Correctness not visible to learners if due date in the future
-        (ShowCorrectness.PAST_DUE, 'tomorrow', False, False),
+        ('tomorrow', False, False),
         # Correctness is visible to learners if due date in the past
-        (ShowCorrectness.PAST_DUE, 'yesterday', False, True),
+        ('yesterday', False, True),
         # Correctness is visible to learners if due date in the past (just)
-        (ShowCorrectness.PAST_DUE, 'today', False, True),
+        ('today', False, True),
         # Correctness is visible to learners if there is no due date
-        (ShowCorrectness.PAST_DUE, None, False, True),
+        (None, False, True),
         # Correctness is visible to staff if due date in the future
-        (ShowCorrectness.PAST_DUE, 'tomorrow', True, True),
+        ('tomorrow', True, True),
         # Correctness is visible to staff if due date in the past
-        (ShowCorrectness.PAST_DUE, 'yesterday', True, True),
+        ('yesterday', True, True),
         # Correctness is visible to staff if there is no due date
-        (ShowCorrectness.PAST_DUE, None, True, True),
+        (None, True, True),
     )
     @ddt.unpack
-    def test_show_correctness_past_due(self, show_correctness, due_date_str, has_staff_access, expected_result):
+    def test_show_correctness_past_due(self, due_date_str, has_staff_access, expected_result):
         """
         Test show_correctness="past_due" to ensure:
         * correctness is always visible to course staff
@@ -391,5 +391,5 @@ class ShowCorrectnessTest(unittest.TestCase):
             due_date = None
         else:
             due_date = getattr(self, due_date_str)
-        self.assertEquals(ShowCorrectness.correctness_available(show_correctness, due_date, has_staff_access),
+        self.assertEquals(ShowCorrectness.correctness_available(ShowCorrectness.PAST_DUE, due_date, has_staff_access),
                           expected_result)

@@ -1675,23 +1675,29 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
     """
     Tests that verify that the progress page works correctly when displaying subsections where correctness is hidden.
     """
+    # Constants used in the test data
     NOW = datetime.now(UTC)
     DAY_DELTA = timedelta(days=1)
     YESTERDAY = NOW - DAY_DELTA
+    TODAY = NOW
     TOMORROW = NOW + DAY_DELTA
+    GRADER_TYPE = 'Homework'
+
+    # Constants expected in progress page
+    JS_GRADE_COLOR = '#b72121'
 
     def setUp(self):
         super(ProgressPageShowCorrectnessTests, self).setUp()
         self.staff_user = UserFactory.create(is_staff=True)
 
-    def setup_course(self, show_correctness='', due_date=None, graded=False, add_problem=True, **course_options):
+    def setup_course(self, show_correctness='', due_date=None, graded=False, **course_options):
         """
         Set up course with a subsection with the given show_correctness, due_date, and graded settings.
         """
         # Use a simple grading policy
         course_options['grading_policy'] = {
             "GRADER": [{
-                "type": "Homework",
+                "type": self.GRADER_TYPE,
                 "min_count": 2,
                 "drop_count": 0,
                 "short_label": "HW",
@@ -1712,7 +1718,7 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
 
         if graded:
             metadata['graded'] = True
-            metadata['format'] = 'Homework'
+            metadata['format'] = self.GRADER_TYPE
 
         with self.store.bulk_operations(self.course.id):
             self.chapter = ItemFactory.create(category='chapter', parent_location=self.course.location,
@@ -1720,23 +1726,28 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
             self.section = ItemFactory.create(category='sequential', parent_location=self.chapter.location,
                                               display_name="Subsection 1", metadata=metadata)
             self.vertical = ItemFactory.create(category='vertical', parent_location=self.section.location)
-            if add_problem:
-                problem_xml = MultipleChoiceResponseXMLFactory().build_xml(
-                    question_text='The correct answer is Choice 1',
-                    choices=[True, False],
-                    choice_names=['choice_0', 'choice_1']
-                )
-                self.problem = ItemFactory.create(category='problem', parent_location=self.vertical.location,
-                                                  data=problem_xml, display_name='Problem 1')
 
         CourseEnrollmentFactory(user=self.user, course_id=self.course.id, mode=CourseMode.HONOR)
 
+    def add_problem(self):
+        """
+        Add a problem to the subsection
+        """
+        problem_xml = MultipleChoiceResponseXMLFactory().build_xml(
+            question_text='The correct answer is Choice 1',
+            choices=[True, False],
+            choice_names=['choice_0', 'choice_1']
+        )
+        self.problem = ItemFactory.create(category='problem', parent_location=self.vertical.location,
+                                          data=problem_xml, display_name='Problem 1')
+        # Re-fetch the course from the database
+        self.course = self.store.get_course(self.course.id)
+
     def answer_problem(self, value=1, max_value=1):
         """
-        Make the user answer the problems.
+        Submit the given score to the problem on behalf of the user
         """
-        request = get_mock_request(self.user)
-        grade_dict = {'value': value, 'max_value': max_value, 'user_id': self.user.id}
+        # Get the module for the problem, as viewed by the user
         field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
             self.course.id,
             self.user,
@@ -1746,10 +1757,13 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         # pylint: disable=protected-access
         module = get_module(
             self.user,
-            request,
+            get_mock_request(self.user),
             self.problem.scope_ids.usage_id,
             field_data_cache,
         )._xmodule
+
+        # Submit the given score/max_score to the problem xmodule
+        grade_dict = {'value': value, 'max_value': max_value, 'user_id': self.user.id}
         module.system.publish(self.problem, 'grade', grade_dict)
 
     def assert_progress_page_show_grades(self, response, show_correctness, due_date, graded,
@@ -1760,13 +1774,13 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
 
         expected_score = "<dd>{score}/{max_score}</dd>".format(score=score, max_score=max_score)
         percent = score / float(max_score)
-        graded_data = [dict(color='#b72121', label='Homework',
+        graded_data = [dict(color=self.JS_GRADE_COLOR, label=self.GRADER_TYPE,
                             data=[[1, percent], [2, 0.0], [3.25, float(avg)]])]
         if percent > 0:
-            graded_data.append(dict(color='#b72121', data=[[4.75, float(avg)]],
-                                    label="Homework-grade_breakdown"))
+            graded_data.append(dict(color=self.JS_GRADE_COLOR, data=[[4.75, float(avg)]],
+                                    label=self.GRADER_TYPE+"-grade_breakdown"))
 
-        ungraded_data = [dict(color='#b72121', label='Homework',
+        ungraded_data = [dict(color=self.JS_GRADE_COLOR, label=self.GRADER_TYPE,
                               data=[[1, 0.0], [2, 0.0], [3.25, 0.0]])]
 
         if show_grades:
@@ -1810,23 +1824,34 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         (ShowCorrectness.ALWAYS, None, True),
         (ShowCorrectness.ALWAYS, YESTERDAY, False),
         (ShowCorrectness.ALWAYS, YESTERDAY, True),
+        (ShowCorrectness.ALWAYS, TODAY, False),
+        (ShowCorrectness.ALWAYS, TODAY, True),
         (ShowCorrectness.ALWAYS, TOMORROW, False),
         (ShowCorrectness.ALWAYS, TOMORROW, True),
         (ShowCorrectness.PAST_DUE, None, False),
         (ShowCorrectness.PAST_DUE, None, True),
         (ShowCorrectness.NEVER, None, False),
         (ShowCorrectness.NEVER, None, True),
+        (ShowCorrectness.NEVER, YESTERDAY, False),
+        (ShowCorrectness.NEVER, YESTERDAY, True),
+        (ShowCorrectness.NEVER, TODAY, False),
+        (ShowCorrectness.NEVER, TODAY, True),
+        (ShowCorrectness.NEVER, TOMORROW, False),
+        (ShowCorrectness.NEVER, TOMORROW, True),
         (ShowCorrectness.PAST_DUE, YESTERDAY, False),
         (ShowCorrectness.PAST_DUE, YESTERDAY, True),
+        (ShowCorrectness.PAST_DUE, TODAY, False),
+        (ShowCorrectness.PAST_DUE, TODAY, True),
         (ShowCorrectness.PAST_DUE, TOMORROW, False),
         (ShowCorrectness.PAST_DUE, TOMORROW, True),
     )
     @ddt.unpack
     def test_progress_page_no_problem_scores(self, show_correctness, due_date, graded):
         """
-        Test that "no problem scores are present" for a course with no problems in, regardless of the various show correctness settings
+        Test that "no problem scores are present" for a course with no problems,
+        regardless of the various show correctness settings.
         """
-        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded, add_problem=False)
+        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded)
         resp = self._get_progress_page()
 
         # Test that no problem scores are present
@@ -1839,27 +1864,37 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         (ShowCorrectness.ALWAYS, None, True, True),
         (ShowCorrectness.ALWAYS, YESTERDAY, False, True),
         (ShowCorrectness.ALWAYS, YESTERDAY, True, True),
+        (ShowCorrectness.ALWAYS, TODAY, False, True),
+        (ShowCorrectness.ALWAYS, TODAY, True, True),
         (ShowCorrectness.ALWAYS, TOMORROW, False, True),
         (ShowCorrectness.ALWAYS, TOMORROW, True, True),
         (ShowCorrectness.NEVER, None, False, False),
         (ShowCorrectness.NEVER, None, True, False),
         (ShowCorrectness.NEVER, YESTERDAY, False, False),
         (ShowCorrectness.NEVER, YESTERDAY, True, False),
+        (ShowCorrectness.NEVER, TODAY, False, False),
+        (ShowCorrectness.NEVER, TODAY, True, False),
         (ShowCorrectness.NEVER, TOMORROW, False, False),
         (ShowCorrectness.NEVER, TOMORROW, True, False),
         (ShowCorrectness.PAST_DUE, None, False, True),
         (ShowCorrectness.PAST_DUE, None, True, True),
         (ShowCorrectness.PAST_DUE, YESTERDAY, False, True),
         (ShowCorrectness.PAST_DUE, YESTERDAY, True, True),
+        (ShowCorrectness.PAST_DUE, TODAY, False, True),
+        (ShowCorrectness.PAST_DUE, TODAY, True, True),
         (ShowCorrectness.PAST_DUE, TOMORROW, False, False),
         (ShowCorrectness.PAST_DUE, TOMORROW, True, False),
     )
     @ddt.unpack
     def test_progress_page_hide_scores_from_learner(self, show_correctness, due_date, graded, show_grades):
         """
-        Test that problem scores are hidden on progress page when correctness is not available to the learner.
+        Test that problem scores are hidden on progress page when correctness is not available to the learner, and that
+        they are visible when it is.
         """
-        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded, add_problem=True)
+        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded)
+        self.add_problem()
+
+        self.client.login(username=self.user.username, password='test')
         resp = self._get_progress_page()
 
         # Ensure that expected text is present
@@ -1880,27 +1915,34 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
         (ShowCorrectness.ALWAYS, None, True, True),
         (ShowCorrectness.ALWAYS, YESTERDAY, False, True),
         (ShowCorrectness.ALWAYS, YESTERDAY, True, True),
+        (ShowCorrectness.ALWAYS, TODAY, False, True),
+        (ShowCorrectness.ALWAYS, TODAY, True, True),
         (ShowCorrectness.ALWAYS, TOMORROW, False, True),
         (ShowCorrectness.ALWAYS, TOMORROW, True, True),
         (ShowCorrectness.NEVER, None, False, False),
         (ShowCorrectness.NEVER, None, True, False),
         (ShowCorrectness.NEVER, YESTERDAY, False, False),
         (ShowCorrectness.NEVER, YESTERDAY, True, False),
+        (ShowCorrectness.NEVER, TODAY, False, False),
+        (ShowCorrectness.NEVER, TODAY, True, False),
         (ShowCorrectness.NEVER, TOMORROW, False, False),
         (ShowCorrectness.NEVER, TOMORROW, True, False),
         (ShowCorrectness.PAST_DUE, None, False, True),
         (ShowCorrectness.PAST_DUE, None, True, True),
         (ShowCorrectness.PAST_DUE, YESTERDAY, False, True),
         (ShowCorrectness.PAST_DUE, YESTERDAY, True, True),
+        (ShowCorrectness.PAST_DUE, TODAY, False, True),
+        (ShowCorrectness.PAST_DUE, TODAY, True, True),
         (ShowCorrectness.PAST_DUE, TOMORROW, False, True),
         (ShowCorrectness.PAST_DUE, TOMORROW, True, True),
     )
     @ddt.unpack
     def test_progress_page_hide_scores_from_staff(self, show_correctness, due_date, graded, show_grades):
         """
-        Test that problem scores are hidden from staff viewing a learner's progress page only if show_correctness=never
+        Test that problem scores are hidden from staff viewing a learner's progress page only if show_correctness=never.
         """
-        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded, add_problem=True)
+        self.setup_course(show_correctness=show_correctness, due_date=due_date, graded=graded)
+        self.add_problem()
 
         # Login as a course staff user to view the student progress page.
         self.client.login(username=self.staff_user.username, password='test')
