@@ -27,7 +27,7 @@ from xmodule.modulestore.tests.utils import TEST_DATA_DIR
 from xmodule.modulestore.xml_importer import import_course_from_xml
 
 from ..config.waffle import waffle, ASSUME_ZERO_GRADE_IF_ABSENT, WRITE_ONLY_IF_ENGAGED
-from ..models import PersistentSubsectionGrade
+from ..models import PersistentSubsectionGrade, PersistentCourseGrade
 from ..new.course_data import CourseData
 from ..new.course_grade_factory import CourseGradeFactory
 from ..new.course_grade import ZeroCourseGrade, CourseGrade
@@ -835,3 +835,46 @@ class TestCourseGradeViewAsStaff(SharedModuleStoreTestCase):
         self.assertEqual(course_grade.passed, expected['passed'])
         self.assertEqual(course_grade.percent, expected['percent'])
         self.assertEqual(course_grade.letter_grade, expected['grade'])
+
+    def test_view_as_learner_does_not_persist(self):
+        """
+        Test to ensure that viewing grades as learner does not persist the learner-facing scores to the database.
+        """
+        # Create a course where the grade will be shown to staff, but not learners.
+        self.create_course(show_correctness=ShowCorrectness.PAST_DUE, due=self.TOMORROW)
+        answer_problem(self.course, self.request, self.problem, score=5, max_value=5)
+        course_grade = CourseGradeFactory().create(self.request.user, self.course)
+
+        # View course grades as staff - should show 100%
+        course_grade.update(view_as_staff=True)
+        self.assertEqual(course_grade.passed, True)
+        self.assertEqual(course_grade.percent, 1)
+        self.assertEqual(course_grade.letter_grade, 'Pass')
+
+        # View course grades as learner - should show 0%
+        course_grade.update(view_as_staff=False)
+        self.assertEqual(course_grade.passed, False)
+        self.assertEqual(course_grade.percent, 0)
+        self.assertEqual(course_grade.letter_grade, None)
+
+        # Ensure that stored PersistentCourseGrade matches staff-facing grade
+        persistent_grade = PersistentCourseGrade.read(self.request.user.id, self.course.id)
+        self.assertIsNotNone(persistent_grade.passed_timestamp)
+        self.assertEqual(persistent_grade.percent_grade, 1)
+        self.assertEqual(persistent_grade.letter_grade, 'Pass')
+
+        # Ensure that stored PersistentSubsectionGrade records also match staff-facing grade
+        subsection_grades = list(PersistentSubsectionGrade.bulk_read_grades(self.request.user.id, self.course.id))
+        self.assertEqual(len(subsection_grades), 1)
+        subsection_grade = subsection_grades[0]
+        self.assertEqual(subsection_grade.earned_graded, 5)
+        self.assertEqual(subsection_grade.possible_graded, 5)
+        self.assertEqual(subsection_grade.earned_all, 5)
+        self.assertEqual(subsection_grade.possible_all, 5)
+
+        # Re-fetch the course grade with a fresh Factory instance,
+        # to make double sure fetched grades still show staff-facing values.
+        course_grade = CourseGradeFactory().create(self.request.user, self.course)
+        self.assertEqual(course_grade.passed, True)
+        self.assertEqual(course_grade.percent, 1)
+        self.assertEqual(course_grade.letter_grade, 'Pass')
