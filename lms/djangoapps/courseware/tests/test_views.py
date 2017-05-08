@@ -1778,7 +1778,7 @@ class ProgressPageShowCorrectnessTests(ProgressPageBaseTests):
                             data=[[1, percent], [2, 0.0], [3.25, float(avg)]])]
         if percent > 0:
             graded_data.append(dict(color=self.JS_GRADE_COLOR, data=[[4.75, float(avg)]],
-                                    label=self.GRADER_TYPE+"-grade_breakdown"))
+                                    label=self.GRADER_TYPE + "-grade_breakdown"))
 
         ungraded_data = [dict(color=self.JS_GRADE_COLOR, label=self.GRADER_TYPE,
                               data=[[1, 0.0], [2, 0.0], [3.25, 0.0]])]
