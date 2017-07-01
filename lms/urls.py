@@ -16,6 +16,7 @@ from config_models.views import ConfigurationModelCurrentAPIView
 from openedx.core.djangoapps.programs.models import ProgramsApiConfig
 from openedx.core.djangoapps.self_paced.models import SelfPacedConfiguration
 
+
 # Uncomment the next two lines to enable the admin:
 if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
     admin.autodiscover()
@@ -139,6 +140,8 @@ js_info_dict = {
 urlpatterns += (
     # Serve catalog of localized strings to be rendered by Javascript
     url(r'^i18n.js$', 'django.views.i18n.javascript_catalog', js_info_dict),
+
+    url(r'^openassessment/fileupload/', include('openassessment.fileupload.urls')),
 )
 
 # sysadmin dashboard, to see what courses are loaded, to delete & load courses
