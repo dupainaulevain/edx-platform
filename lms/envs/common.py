@@ -154,6 +154,9 @@ FEATURES = {
     # Don't autoplay videos for students
     'AUTOPLAY_VIDEOS': False,
 
+    # Whether to advance to next unit when a video ends, by default
+    'AUTOADVANCE_VIDEOS': False,
+
     # Enable instructor dash to submit background tasks
     'ENABLE_INSTRUCTOR_BACKGROUND_TASKS': True,
 
