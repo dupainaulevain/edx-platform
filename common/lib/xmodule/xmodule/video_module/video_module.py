@@ -326,10 +326,8 @@ class VideoModule(VideoFields, VideoTranscriptsMixin, VideoStudentViewHandlers, 
             'showCaptions': json.dumps(self.show_captions),
             'generalSpeed': self.global_speed,
             'speed': self.speed,
-            'autoAdvance':
-                self.auto_advance or
-                getattr(self, 'video_auto_advance', None) or
-                settings.FEATURES.get('AUTOADVANCE_VIDEOS', False),
+            'autoAdvanceEnabled': settings.FEATURES.get('ENABLE_AUTOADVANCE_VIDEOS', False),
+            'autoAdvance': self.auto_advance or getattr(self, 'video_auto_advance', False),
             'savedVideoPosition': self.saved_video_position.total_seconds(),
             'start': self.start_time.total_seconds(),
             'end': self.end_time.total_seconds(),
