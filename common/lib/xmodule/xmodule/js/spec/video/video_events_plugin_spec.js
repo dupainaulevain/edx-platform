@@ -186,6 +186,7 @@
                 'seek': plugin.onSeek,
                 'skip': plugin.onSkip,
                 'speedchange': plugin.onSpeedChange,
+                'autoadvancechange': plugin.onAutoAdvanceChange,
                 'language_menu:show': plugin.onShowLanguageMenu,
                 'language_menu:hide': plugin.onHideLanguageMenu,
                 'transcript:show': plugin.onShowTranscript,
