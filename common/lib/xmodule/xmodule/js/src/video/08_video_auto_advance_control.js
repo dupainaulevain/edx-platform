@@ -41,13 +41,13 @@
 
                 destroy: function() {
                     this.el.off({
-                        'click': this.onClick,
+                        click: this.onClick
                     });
                     this.el.remove();
                     this.state.el.off({
-                        'ready': this.autoPlay,
-                        'ended': this.autoAdvance,
-                        'destroy': this.destroy,
+                        ready: this.autoPlay,
+                        ended: this.autoAdvance,
+                        destroy: this.destroy
                     });
                     delete this.state.videoAutoAdvanceControl;
                 },
@@ -79,18 +79,18 @@
                  */
                 bindHandlers: function() {
                     this.el.on({
-                        'click': this.onClick
+                        click: this.onClick
                     });
                     this.state.el.on({
-                        'ready': this.autoPlay,
-                        'ended': this.autoAdvance,
-                        'destroy': this.destroy
+                        ready: this.autoPlay,
+                        ended: this.autoAdvance,
+                        destroy: this.destroy
                     });
                 },
 
                 onClick: function(event) {
-                    event.preventDefault();
                     var enabled = !this.state.auto_advance;
+                    event.preventDefault();
                     this.setAutoAdvance(enabled);
                     this.el.trigger('autoadvancechange', [enabled]);
                 },
@@ -101,9 +101,9 @@
                  */
                 setAutoAdvance: function(enabled) {
                     if (enabled) {
-                        this.el.addClass('active')
+                        this.el.addClass('active');
                     } else {
-                        this.el.removeClass('active')
+                        this.el.removeClass('active');
                     }
                 },
 
@@ -117,7 +117,7 @@
                     if (this.state.auto_advance) {
                         $('.sequence-nav-button.button-next').first().click();
                     }
-                },
+                }
             };
 
             return AutoAdvanceControl;
