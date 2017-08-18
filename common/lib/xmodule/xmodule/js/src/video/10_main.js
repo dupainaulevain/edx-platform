@@ -73,7 +73,7 @@
                     id = el.attr('id').replace(/video_/, ''),
                     storage = VideoStorage('VideoState', id),
                     bumperMetadata = el.data('bumper-metadata'),
-                    autoAdvanceEnabled = el.data('autoadvance-enabled') == "True",
+                    autoAdvanceEnabled = el.data('autoadvance-enabled') === 'True',
                     mainVideoModules = [FocusGrabber, VideoControl, VideoPlayPlaceholder,
                         VideoPlayPauseControl, VideoProgressSlider, VideoSpeedControl,
                         VideoVolumeControl, VideoQualityControl, VideoFullScreen, VideoCaption, VideoCommands,
