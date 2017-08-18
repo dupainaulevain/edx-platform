@@ -37,12 +37,12 @@
 
             initialize: function() {
                 this.events = {
-                    'speedchange': this.onSpeedChange,
-                    'autoadvancechange': this.onAutoAdvanceChange,
-                    'play': this.bindUnloadHandler,
+                    speedchange: this.onSpeedChange,
+                    autoadvancechange: this.onAutoAdvanceChange,
+                    play: this.bindUnloadHandler,
                     'pause destroy': this.saveStateHandler,
                     'language_menu:change': this.onLanguageChange,
-                    'youtube_availability': this.onYoutubeAvailability
+                    youtube_availability: this.onYoutubeAvailability
                 };
                 this.bindHandlers();
             },
