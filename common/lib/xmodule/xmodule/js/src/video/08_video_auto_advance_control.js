@@ -55,13 +55,12 @@
         /** Initializes the module. */
         initialize: function() {
             var state = this.state;
-            var globally_enabled = state.config.autoAdvanceEnabled;
-            if (globally_enabled) {
-                this.el = $(this.template);
-                this.render();
-                this.setAutoAdvance(state.auto_advance);
-                this.bindHandlers();
-            }
+
+            this.el = $(this.template);
+            this.render();
+            this.setAutoAdvance(state.auto_advance);
+            this.bindHandlers();
+
             return true;
         },
 

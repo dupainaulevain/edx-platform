@@ -326,7 +326,6 @@ class VideoModule(VideoFields, VideoTranscriptsMixin, VideoStudentViewHandlers, 
             'showCaptions': json.dumps(self.show_captions),
             'generalSpeed': self.global_speed,
             'speed': self.speed,
-            'autoAdvanceEnabled': settings.FEATURES.get('ENABLE_AUTOADVANCE_VIDEOS', False),
             'autoAdvance': self.auto_advance or getattr(self, 'video_auto_advance', False),
             'savedVideoPosition': self.saved_video_position.total_seconds(),
             'start': self.start_time.total_seconds(),
@@ -367,6 +366,7 @@ class VideoModule(VideoFields, VideoTranscriptsMixin, VideoStudentViewHandlers, 
         bumperize(self)
 
         context = {
+            'autoadvance_enabled': settings.FEATURES.get('ENABLE_AUTOADVANCE_VIDEOS', False),
             'bumper_metadata': json.dumps(self.bumper['metadata']),  # pylint: disable=E1101
             'metadata': json.dumps(OrderedDict(metadata)),
             'poster': json.dumps(get_poster(self)),

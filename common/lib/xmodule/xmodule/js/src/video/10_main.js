@@ -73,8 +73,9 @@
                     id = el.attr('id').replace(/video_/, ''),
                     storage = VideoStorage('VideoState', id),
                     bumperMetadata = el.data('bumper-metadata'),
+                    autoadvance_enabled = el.data('autoadvance-enabled') == "True",
                     mainVideoModules = [FocusGrabber, VideoControl, VideoPlayPlaceholder,
-                        VideoPlayPauseControl, VideoProgressSlider, VideoAutoAdvanceControl, VideoSpeedControl,
+                        VideoPlayPauseControl, VideoProgressSlider, VideoSpeedControl,
                         VideoVolumeControl, VideoQualityControl, VideoFullScreen, VideoCaption, VideoCommands,
                         VideoContextMenu, VideoSaveStatePlugin, VideoEventsPlugin],
                     bumperVideoModules = [VideoControl, VideoPlaySkipControl, VideoSkipControl,
@@ -137,6 +138,10 @@
                     });
                 } else {
                     initialize(state, element);
+                }
+
+                if (autoadvance_enabled) {
+                    mainVideoModules.push(VideoAutoAdvanceControl);
                 }
 
                 if (!youtubeXhr) {
