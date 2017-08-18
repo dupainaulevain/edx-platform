@@ -373,33 +373,33 @@ function(VideoPlayer, i18n, moment, _) {
             },
                 // Conversions used to pre-process some configuration data.
             conversions = {
-                'showCaptions': isBoolean,
-                'autoplay': isBoolean,
-                'autohideHtml5': isBoolean,
-                'savedVideoPosition': function(value) {
+                showCaptions: isBoolean,
+                autoplay: isBoolean,
+                autohideHtml5: isBoolean,
+                savedVideoPosition: function(value) {
                     return storage.getItem('savedVideoPosition', true) ||
                             Number(value) ||
                             0;
                 },
-                'speed': function(value) {
+                speed: function(value) {
                     return storage.getItem('speed', true) || value;
                 },
-                'generalSpeed': function(value) {
+                generalSpeed: function(value) {
                     return storage.getItem('general_speed') ||
                             value ||
                             '1.0';
                 },
-                'autoAdvance': function(value) {
+                autoAdvance: function(value) {
                     return storage.getItem('auto_advance') ||
                             value ||
                             false;
                 },
-                'transcriptLanguage': function(value) {
+                transcriptLanguage: function(value) {
                     return storage.getItem('language') ||
                             value ||
                             'en';
                 },
-                'ytTestTimeout': function(value) {
+                ytTestTimeout: function(value) {
                     value = parseInt(value, 10);
 
                     if (!isFinite(value)) {
@@ -408,7 +408,7 @@ function(VideoPlayer, i18n, moment, _) {
 
                     return value;
                 },
-                'startTime': function(value) {
+                startTime: function(value) {
                     value = parseInt(value, 10);
                     if (!isFinite(value) || value < 0) {
                         return 0;
@@ -416,7 +416,7 @@ function(VideoPlayer, i18n, moment, _) {
 
                     return value;
                 },
-                'endTime': function(value) {
+                endTime: function(value) {
                     value = parseInt(value, 10);
 
                     if (!isFinite(value) || value === 0) {
