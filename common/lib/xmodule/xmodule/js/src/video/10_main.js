@@ -73,7 +73,7 @@
                     id = el.attr('id').replace(/video_/, ''),
                     storage = VideoStorage('VideoState', id),
                     bumperMetadata = el.data('bumper-metadata'),
-                    autoadvance_enabled = el.data('autoadvance-enabled') == "True",
+                    autoAdvanceEnabled = el.data('autoadvance-enabled') == "True",
                     mainVideoModules = [FocusGrabber, VideoControl, VideoPlayPlaceholder,
                         VideoPlayPauseControl, VideoProgressSlider, VideoSpeedControl,
                         VideoVolumeControl, VideoQualityControl, VideoFullScreen, VideoCaption, VideoCommands,
@@ -140,7 +140,7 @@
                     initialize(state, element);
                 }
 
-                if (autoadvance_enabled) {
+                if (autoAdvanceEnabled) {
                     mainVideoModules.push(VideoAutoAdvanceControl);
                 }
 
