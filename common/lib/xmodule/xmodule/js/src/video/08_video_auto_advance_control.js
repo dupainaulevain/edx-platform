@@ -2,8 +2,9 @@
     'use strict';
     define(
         'video/08_video_auto_advance_control.js', [
-            'edx-ui-toolkit/js/utils/html-utils'
-        ], function(HtmlUtils) {
+            'edx-ui-toolkit/js/utils/html-utils',
+            'underscore'
+        ], function(HtmlUtils, _) {
             /**
              * Auto advance control module.
              * @exports video/08_video_auto_advance_control.js
