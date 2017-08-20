@@ -40,6 +40,7 @@ class TestVideoYouTube(TestVideo):
         sources = [u'example.mp4', u'example.webm']
 
         expected_context = {
+            'autoadvance_enabled': False,
             'branding_info': None,
             'license': None,
             'bumper_metadata': 'null',
@@ -50,6 +51,7 @@ class TestVideoYouTube(TestVideo):
             'handout': None,
             'id': self.item_descriptor.location.html_id(),
             'metadata': json.dumps(OrderedDict({
+                'autoAdvance': False,
                 'saveStateUrl': self.item_descriptor.xmodule_runtime.ajax_url + '/save_user_state',
                 'autoplay': False,
                 'streams': '0.75:jNCf2gIqpeE,1.00:ZwkTiUPN0mg,1.25:rsq9auxASqI,1.50:kMyNdzVHHgg',
@@ -120,6 +122,7 @@ class TestVideoNonYouTube(TestVideo):
         sources = [u'example.mp4', u'example.webm']
 
         expected_context = {
+            'autoadvance_enabled': False,
             'branding_info': None,
             'license': None,
             'bumper_metadata': 'null',
@@ -130,6 +133,7 @@ class TestVideoNonYouTube(TestVideo):
             'handout': None,
             'id': self.item_descriptor.location.html_id(),
             'metadata': json.dumps(OrderedDict({
+                'autoAdvance': False,
                 'saveStateUrl': self.item_descriptor.xmodule_runtime.ajax_url + '/save_user_state',
                 'autoplay': False,
                 'streams': '1.00:3_yD_cEKoCk',
@@ -187,6 +191,7 @@ class TestGetHtmlMethod(BaseTestXmodule):
         super(TestGetHtmlMethod, self).setUp()
         self.setup_course()
         self.default_metadata_dict = OrderedDict({
+            'autoAdvance': False,
             'saveStateUrl': '',
             'autoplay': settings.FEATURES.get('AUTOPLAY_VIDEOS', True),
             'streams': '1.00:3_yD_cEKoCk',
@@ -270,6 +275,7 @@ class TestGetHtmlMethod(BaseTestXmodule):
         sources = [u'example.mp4', u'example.webm']
 
         expected_context = {
+            'autoadvance_enabled': False,
             'branding_info': None,
             'license': None,
             'bumper_metadata': 'null',
@@ -392,6 +398,7 @@ class TestGetHtmlMethod(BaseTestXmodule):
         ]
 
         initial_context = {
+            'autoadvance_enabled': False,
             'branding_info': None,
             'license': None,
             'bumper_metadata': 'null',
@@ -516,6 +523,7 @@ class TestGetHtmlMethod(BaseTestXmodule):
         metadata['autoplay'] = False
         metadata['sources'] = ""
         initial_context = {
+            'autoadvance_enabled': False,
             'branding_info': None,
             'license': None,
             'bumper_metadata': 'null',
@@ -690,6 +698,7 @@ class TestGetHtmlMethod(BaseTestXmodule):
         metadata = self.default_metadata_dict
         metadata['sources'] = ""
         initial_context = {
+            'autoadvance_enabled': False,
             'branding_info': None,
             'license': None,
             'bumper_metadata': 'null',
@@ -799,6 +808,7 @@ class TestGetHtmlMethod(BaseTestXmodule):
         ]
 
         initial_context = {
+            'autoadvance_enabled': False,
             'branding_info': {
                 'logo_src': 'http://www.xuetangx.com/static/images/logo.png',
                 'logo_tag': 'Video hosted by XuetangX.com',
@@ -1582,6 +1592,7 @@ class TestVideoWithBumper(TestVideo):
         content = self.item_descriptor.render(STUDENT_VIEW).content
         sources = [u'example.mp4', u'example.webm']
         expected_context = {
+            'autoadvance_enabled': False,
             'branding_info': None,
             'license': None,
             'bumper_metadata': json.dumps(OrderedDict({
@@ -1609,6 +1620,7 @@ class TestVideoWithBumper(TestVideo):
             'handout': None,
             'id': self.item_descriptor.location.html_id(),
             'metadata': json.dumps(OrderedDict({
+                'autoAdvance': False,
                 'saveStateUrl': self.item_descriptor.xmodule_runtime.ajax_url + '/save_user_state',
                 'autoplay': False,
                 'streams': '0.75:jNCf2gIqpeE,1.00:ZwkTiUPN0mg,1.25:rsq9auxASqI,1.50:kMyNdzVHHgg',
