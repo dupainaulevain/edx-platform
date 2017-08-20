@@ -14,6 +14,7 @@ function(HTML5Video, HTML5HLSVideo, Resizer, HLS, _) {
 
             return dfd.promise();
         },
+        /* eslint-disable no-use-before-define */
         methodsDict = {
             destroy: destroy,
             duration: duration,
@@ -54,6 +55,7 @@ function(HTML5Video, HTML5HLSVideo, Resizer, HLS, _) {
             figureOutStartingTime: figureOutStartingTime,
             updatePlayTime: updatePlayTime
         };
+        /* eslint-enable no-use-before-define */
 
     VideoPlayer.prototype = methodsDict;
 

@@ -62,6 +62,7 @@ function(VideoPlayer, i18n, moment, _) {
             });
         },
 
+        /* eslint-disable no-use-before-define */
         methodsDict = {
             bindTo: bindTo,
             fetchMetadata: fetchMetadata,
@@ -85,6 +86,7 @@ function(VideoPlayer, i18n, moment, _) {
             loadYoutubePlayer: loadYoutubePlayer,
             loadYouTubeIFrameAPI: loadYouTubeIFrameAPI
         },
+        /* eslint-enable no-use-before-define */
 
         _youtubeApiDeferred = null,
         _oldOnYouTubeIframeAPIReady;
