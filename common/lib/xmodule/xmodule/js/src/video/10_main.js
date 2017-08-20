@@ -74,10 +74,12 @@
                     storage = VideoStorage('VideoState', id),
                     bumperMetadata = el.data('bumper-metadata'),
                     autoAdvanceEnabled = el.data('autoadvance-enabled') === 'True',
-                    mainVideoModules = [FocusGrabber, VideoControl, VideoPlayPlaceholder,
+                    mainVideoModules = [
+                        FocusGrabber, VideoControl, VideoPlayPlaceholder,
                         VideoPlayPauseControl, VideoProgressSlider, VideoSpeedControl,
                         VideoVolumeControl, VideoQualityControl, VideoFullScreen, VideoCaption, VideoCommands,
-                        VideoContextMenu, VideoSaveStatePlugin, VideoEventsPlugin],
+                        VideoContextMenu, VideoSaveStatePlugin, VideoEventsPlugin
+                    ].concat(autoAdvanceEnabled ? [VideoAutoAdvanceControl] : []),
                     bumperVideoModules = [VideoControl, VideoPlaySkipControl, VideoSkipControl,
                         VideoVolumeControl, VideoCaption, VideoCommands, VideoSaveStatePlugin, VideoEventsBumperPlugin],
                     state = {
@@ -138,10 +140,6 @@
                     });
                 } else {
                     initialize(state, element);
-                }
-
-                if (autoAdvanceEnabled) {
-                    mainVideoModules.push(VideoAutoAdvanceControl);
                 }
 
                 if (!youtubeXhr) {
