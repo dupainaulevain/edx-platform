@@ -1667,6 +1667,13 @@ class TestVideoWithBumper(TestVideo):
 class TestAutoAdvanceVideo(TestVideo):
     """
     Tests the server side of video auto-advance.
+
+    We check the availability of auto-advance (feature flag) and the value of the
+    setting for the current video when the course enables it (course-level,
+    advanced setting).
+    But: we don't check what happens with the course-level setting when the feature
+    is globally disabled, because the feature is disabled and the course-level
+    setting has no meaning and shouldn't be used.
     """
     CATEGORY = "video"
     METADATA = {}
@@ -1830,94 +1837,6 @@ class TestAutoAdvanceVideo(TestVideo):
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
         expected_context['autoadvance_enabled'] = True
-        with override_settings(FEATURES=self.FEATURES):
-            expected_content = self.item_descriptor.xmodule_runtime.render_template('video.html', expected_context)
-        self.assertEqual(content, expected_content)
-
-    # TODO test that if the advanced settings enable autoadvance and the feature flag too, then it's enabled
-    # TODO test that if the advanced settings enable autoadvance but the feature flag is disabled, then it's disabled
-    # TODO test that if the advanced settings disable autoadvance, and the feature flag is however_it_is, then it's disabled
-
-    # We don't check what happens with the course-level setting when the feature is globally disabled, because the feature is disabled and the course-level setting has no meaning and shouldn't be used.
-    # FIXME delete this test
-    def test_autoadvance_in_video_globally_disabled(self):
-        """
-        Check that the current video will not autoadvance if ENABLE_AUTOADVANCE_VIDEOS
-        is off, no matter what the course-level settings (advance settings) are.
-        This test doesn't check the availibility of the controls but the actual
-        auto-advance setting.
-        """
-        self.FEATURES.update({
-            "ENABLE_AUTOADVANCE_VIDEOS": False,
-        })
-        # FIXME change the course setting to True
-
-        # FIXME continue
-        with override_settings(FEATURES=self.FEATURES):
-            content = self.item_descriptor.render(STUDENT_VIEW).content
-
-        sources = [u'example.mp4', u'example.webm']
-        expected_context = {
-            'autoadvance_enabled': False,
-            'branding_info': None,
-            'license': None,
-            'cdn_eval': False,
-            'cdn_exp_group': None,
-            'display_name': u'A Name',
-            'download_video_link': u'example.mp4',
-            'handout': None,
-            'id': self.item_descriptor.location.html_id(),
-            'bumper_metadata': 'null',
-            'metadata': json.dumps(OrderedDict({
-                'autoAdvance': True,
-                'saveStateUrl': self.item_descriptor.xmodule_runtime.ajax_url + '/save_user_state',
-                'autoplay': False,
-                'streams': '0.75:jNCf2gIqpeE,1.00:ZwkTiUPN0mg,1.25:rsq9auxASqI,1.50:kMyNdzVHHgg',
-                'sub': 'a_sub_file.srt.sjson',
-                'sources': sources,
-                'poster': None,
-                'captionDataDir': None,
-                'showCaptions': 'true',
-                'generalSpeed': 1.0,
-                'speed': None,
-                'savedVideoPosition': 0.0,
-                'start': 3603.0,
-                'end': 3610.0,
-                'transcriptLanguage': 'en',
-                'transcriptLanguages': OrderedDict({'en': 'English', 'uk': u'Українська'}),
-                'ytTestTimeout': 1500,
-                'ytApiUrl': 'https://www.youtube.com/iframe_api',
-                'ytMetadataUrl': 'https://www.googleapis.com/youtube/v3/videos/',
-                'ytKey': None,
-                'transcriptTranslationUrl': self.item_descriptor.xmodule_runtime.handler_url(
-                    self.item_descriptor, 'transcript', 'translation/__lang__'
-                ).rstrip('/?'),
-                'transcriptAvailableTranslationsUrl': self.item_descriptor.xmodule_runtime.handler_url(
-                    self.item_descriptor, 'transcript', 'available_translations'
-                ).rstrip('/?'),
-                'autohideHtml5': False,
-                'recordedYoutubeIsAvailable': True,
-            })),
-            'track': None,
-            'transcript_download_format': u'srt',
-            'transcript_download_formats_list': [
-                {'display_name': 'SubRip (.srt) file', 'value': 'srt'},
-                {'display_name': 'Text (.txt) file', 'value': 'txt'}
-            ],
-            'poster': 'null'
-        }
-
-        with override_settings(FEATURES=self.FEATURES):
-            expected_content = self.item_descriptor.xmodule_runtime.render_template('video.html', expected_context)
-
-        self.assertEqual(content, expected_content)
-
-        # Now disable at course-level and check that it's disabled
-        # FIXME how to change course-level?
-
-        with override_settings(FEATURES=self.FEATURES):
-            content = self.item_descriptor.render(STUDENT_VIEW).content
-        expected_context['metadata']['autoAdvance'] = False
         with override_settings(FEATURES=self.FEATURES):
             expected_content = self.item_descriptor.xmodule_runtime.render_template('video.html', expected_context)
         self.assertEqual(content, expected_content)
