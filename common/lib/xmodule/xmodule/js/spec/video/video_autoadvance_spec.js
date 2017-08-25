@@ -26,7 +26,7 @@
 
         describe('when video ends', function() {
             it('can autoadvance', function() {
-                const nextButton = $('.sequence-nav-button.button-next').first();
+                var nextButton = $('.sequence-nav-button.button-next').first();
                 spyOnEvent(nextButton[0],'click');
                 state.el.trigger('ended');
                 jasmine.clock().tick(2);
