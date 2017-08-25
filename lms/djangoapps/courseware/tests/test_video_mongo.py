@@ -1664,6 +1664,7 @@ class TestVideoWithBumper(TestVideo):
         expected_content = self.item_descriptor.xmodule_runtime.render_template('video.html', expected_context)
         self.assertEqual(content, expected_content)
 
+
 class TestAutoAdvanceVideo(TestVideo):
     """
     Tests the server side of video auto-advance.
