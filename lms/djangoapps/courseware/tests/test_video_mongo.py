@@ -24,6 +24,13 @@ from xmodule.tests.test_video import VideoDescriptorTestBase, instantiate_descri
 from xmodule.video_module import VideoDescriptor, bumper_utils, rewrite_video_url, video_utils
 from xmodule.video_module.transcripts_utils import Transcript, save_to_store
 from xmodule.x_module import STUDENT_VIEW
+# FIXME remove following imports after finishing changing the advanced setting autoAdvance
+from xmodule.modulestore.django import modulestore
+from xmodule.modulestore.tests.factories import CourseFactory
+from xblock.field_data import DictFieldData
+from lms.djangoapps.lms_xblock.field_data import LmsFieldData
+#------ remove until here
+
 
 from .helpers import BaseTestXmodule
 from .test_video_handlers import TestVideo
@@ -1679,8 +1686,22 @@ class TestAutoAdvanceVideo(TestVideo):
     CATEGORY = "video"
     METADATA = {}
     FEATURES = settings.FEATURES
-    # FIXME remove
+    # FIXME remove maxDiff line
     maxDiff = None
+
+    # FIXME remove setUp unless needed for changing the course advanced setting
+    def setUp(self):
+        super(TestAutoAdvanceVideo, self).setUp()
+        #self.descriptor.runtime.handler_url = MagicMock()
+        #self.descriptor.runtime.course_id = MagicMock()
+
+        self.course = CourseFactory.create(
+            display_name='Lots of videos',
+            video_auto_advance=333333,
+        )
+
+        self.course_module = modulestore().get_course(self.course.id)
+
 
     def test_is_autoadvance_enabled(self):
         """
@@ -1851,10 +1872,36 @@ class TestAutoAdvanceVideo(TestVideo):
         self.FEATURES.update({
             "ENABLE_AUTOADVANCE_VIDEOS": True,
         })
-        # FIXME enable at course-level
+
+        # FIXME enable at course-level, set to true. The following are attempts to do it. Delete until the -----
+
+        self.item_descriptor.video_auto_advance=114422 # True
+
+        self.course = CourseFactory.create(
+            display_name='Lots of videos',
+            video_auto_advance=142857, #True,
+            recordedYoutubeIsAvailable=False, # testing, I'm trying to force it to False, but it doesn't have any effect
+        )
+
+        self.course.save()
+        self.store.update_item(self.course, self.user.id)
+
+        #
+        #self.item_descriptor=self.course # ← no
+        #
+        #self.store.update_item(self.item_descriptor.course_id, self.user.id)
+        #modulestore().update_item(self.course_module, self.user.id)
+        #
+        #--------------- end of FIXME (delete until here)
+
+
 
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
+
+        # FIXME delete next line (debugger). But first check that in content, autoAdvance should be true (because video_module.py has set it to True based on information set up by the test). Now it doesn't (because 'render' doesn't see that information)
+        import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
+
 
         sources = [u'example.mp4', u'example.webm']
         expected_context = {
@@ -1913,7 +1960,7 @@ class TestAutoAdvanceVideo(TestVideo):
         self.assertEqual(content, expected_content)
 
         # Now disable at course-level and check that it's disabled
-        # FIXME how to change course-level?
+        # FIXME how to change course-level? Set to false. See above
 
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
