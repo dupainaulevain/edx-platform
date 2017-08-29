@@ -1895,6 +1895,9 @@ class TestAutoAdvanceVideo(TestVideo):
         # self.store.update_item(self.course, self.user.id)
         self.store.update_item(self.item_descriptor, self.user.id)
 
+        # I also try with „.location“
+        #self.store.update_item(self.item_descriptor.location, self.user.id)  # ← AttributeError: 'BlockUsageLocator' object has no attribute 'location'.
+
         # „Note that child xblocks inherit field data from parent xblocks, so this should work equally well if you set the attribute on the course that item_descriptor is a part of and save it to the modulestore.“ → so I try this too:
         self.store.update_item(self.course, self.user.id)
         self.course.save()
