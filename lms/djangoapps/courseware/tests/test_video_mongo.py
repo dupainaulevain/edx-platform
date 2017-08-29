@@ -1695,12 +1695,12 @@ class TestAutoAdvanceVideo(TestVideo):
         #self.descriptor.runtime.handler_url = MagicMock()
         #self.descriptor.runtime.course_id = MagicMock()
 
-        self.course = CourseFactory.create(
-            display_name='Lots of videos',
-            video_auto_advance=333333,
-        )
-
-        self.course_module = modulestore().get_course(self.course.id)
+        # commented to avoid replacing the other course used by the test
+        # self.course = CourseFactory.create(
+        #     display_name='Lots of videos',
+        #     video_auto_advance=333333,
+        # )
+        #self.course_module = modulestore().get_course(self.course.id)
 
 
     def test_is_autoadvance_enabled(self):
