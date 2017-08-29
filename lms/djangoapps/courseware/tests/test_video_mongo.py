@@ -1875,16 +1875,30 @@ class TestAutoAdvanceVideo(TestVideo):
 
         # FIXME enable at course-level, set to true. The following are attempts to do it. Delete until the -----
 
+        # different attempts of setting it to True (actually to anything different to False)
         self.item_descriptor.video_auto_advance=114422 # True
+        #self.item_descriptor.save() # fails with:     raise InvalidScopeError("{block}.{name} is read-only, cannot set".format(block=block, name=name))
+        #self.initialize_module(metadata={"video_auto_advance": 335566})
+        self.course.video_auto_advance=555111
 
-        self.course = CourseFactory.create(
-            display_name='Lots of videos',
-            video_auto_advance=142857, #True,
-            recordedYoutubeIsAvailable=False, # testing, I'm trying to force it to False, but it doesn't have any effect
-        )
+        # Commented this part because: „I also noticed that you tried creating a brand new course before calling update on it. Even if the video_auto_advance attribute is properly set when creating the new course, this won't work as written either because the video module being rendered is a child of the old course, not the new course.“
+        # self.course = CourseFactory.create(
+        #     display_name='Lots of videos',
+        #     video_auto_advance=142857, #True,
+        #     recordedYoutubeIsAvailable=False, # testing, I'm trying to force it to False, but it doesn't have any effect
+        # )
+        # 
+        # self.course.save()
 
-        self.course.save()
+
+        # FIXME „@clemente It looks like you're changing the field on the video descriptor and then calling update on the course descriptor instead of the video descriptor.“
+        # self.store.update_item(self.course, self.user.id)
+        self.store.update_item(self.item_descriptor, self.user.id)
+
+        # „Note that child xblocks inherit field data from parent xblocks, so this should work equally well if you set the attribute on the course that item_descriptor is a part of and save it to the modulestore.“ → so I try this too:
         self.store.update_item(self.course, self.user.id)
+        self.course.save()
+
 
         #
         #self.item_descriptor=self.course # ← no
@@ -1898,6 +1912,12 @@ class TestAutoAdvanceVideo(TestVideo):
 
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
+
+            # FIXME testing another way or rendering:
+            item = self.store.get_item(self.item_descriptor.location)
+            # content2a = item.render(STUDENT_VIEW) ← fails with „*** UndefinedContext:“ but doesn't explain more
+            # content2b = content2a.content
+
 
         # FIXME delete next line (debugger). But first check that in content, autoAdvance should be true (because video_module.py has set it to True based on information set up by the test). Now it doesn't (because 'render' doesn't see that information)
         import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
