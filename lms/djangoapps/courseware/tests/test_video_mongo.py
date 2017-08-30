@@ -24,21 +24,10 @@ from xmodule.tests.test_video import VideoDescriptorTestBase, instantiate_descri
 from xmodule.video_module import VideoDescriptor, bumper_utils, rewrite_video_url, video_utils
 from xmodule.video_module.transcripts_utils import Transcript, save_to_store
 from xmodule.x_module import STUDENT_VIEW
-# FIXME remove following imports after finishing changing the advanced setting autoAdvance
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.factories import CourseFactory
-from xblock.field_data import DictFieldData
-from lms.djangoapps.lms_xblock.field_data import LmsFieldData
-import logging
-#------ remove until here
-
 
 from .helpers import BaseTestXmodule
 from .test_video_handlers import TestVideo
 from .test_video_xml import SOURCE_XML
-
-# FIXME remove log
-log = logging.getLogger(__name__)
 
 @attr(shard=1)
 class TestVideoYouTube(TestVideo):
