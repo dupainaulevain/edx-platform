@@ -29,6 +29,7 @@ from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.factories import CourseFactory
 from xblock.field_data import DictFieldData
 from lms.djangoapps.lms_xblock.field_data import LmsFieldData
+import logging
 #------ remove until here
 
 
@@ -36,6 +37,8 @@ from .helpers import BaseTestXmodule
 from .test_video_handlers import TestVideo
 from .test_video_xml import SOURCE_XML
 
+# FIXME remove log
+log = logging.getLogger(__name__)
 
 @attr(shard=1)
 class TestVideoYouTube(TestVideo):
@@ -1899,8 +1902,8 @@ class TestAutoAdvanceVideo(TestVideo):
         #self.store.update_item(self.item_descriptor.location, self.user.id)  # ← AttributeError: 'BlockUsageLocator' object has no attribute 'location'.
 
         # „Note that child xblocks inherit field data from parent xblocks, so this should work equally well if you set the attribute on the course that item_descriptor is a part of and save it to the modulestore.“ → so I try this too:
-        self.store.update_item(self.course, self.user.id)
         self.course.save()
+        self.store.update_item(self.course, self.user.id)
 
 
         #
@@ -1908,6 +1911,16 @@ class TestAutoAdvanceVideo(TestVideo):
         #
         #self.store.update_item(self.item_descriptor.course_id, self.user.id)
         #modulestore().update_item(self.course_module, self.user.id)
+
+
+        # Trying different approach
+        log.warning("before render1")
+        self.item_descriptor.render(STUDENT_VIEW)
+        item_instance = self.item_descriptor.xmodule_runtime.xmodule_instance
+        item_instance.video_auto_advance = 919191 # *** AttributeError: 'VideoModuleWithMixins' object has no attribute 'video_auto_advance'
+
+        log.warning("before render2")
+
         #
         #--------------- end of FIXME (delete until here)
 

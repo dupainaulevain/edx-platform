@@ -312,6 +312,9 @@ class VideoModule(VideoFields, VideoTranscriptsMixin, VideoStudentViewHandlers, 
                 edx_video_id=self.edx_video_id.strip()
             )
 
+        # FIXME delete logger
+        log.warning("video_module.py sees video_auto_advance: %s",getattr(self, 'video_auto_advance', False))
+
         metadata = {
             'saveStateUrl': self.system.ajax_url + '/save_user_state',
             'autoplay': settings.FEATURES.get('AUTOPLAY_VIDEOS', False),
