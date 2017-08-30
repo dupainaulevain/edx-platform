@@ -1882,10 +1882,6 @@ class TestAutoAdvanceVideo(TestVideo):
             content = self.item_descriptor.render(STUDENT_VIEW).content
 
 
-        # FIXME delete next line (debugger). But first check that in content, autoAdvance should be true (because video_module.py has set it to True based on information set up by the test). Now it doesn't (because 'render' doesn't see that information)
-        import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
-
-
         sources = [u'example.mp4', u'example.webm']
         expected_context = {
             'autoadvance_enabled': True,
@@ -1943,7 +1939,8 @@ class TestAutoAdvanceVideo(TestVideo):
         self.assertEqual(content, expected_content)
 
         # Now disable at course-level and check that it's disabled
-        # FIXME how to change course-level? Set to false. See above
+        self.change_course_setting_autoadvance(new_value=False)
+
 
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
