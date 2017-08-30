@@ -1692,28 +1692,18 @@ class TestAutoAdvanceVideo(TestVideo):
     # FIXME remove maxDiff line
     maxDiff = None
 
-    # FIXME remove setUp unless needed for changing the course advanced setting
-    def setUp(self):
-        super(TestAutoAdvanceVideo, self).setUp()
-        #self.descriptor.runtime.handler_url = MagicMock()
-        #self.descriptor.runtime.course_id = MagicMock()
-
-        # commented to avoid replacing the other course used by the test
-        # self.course = CourseFactory.create(
-        #     display_name='Lots of videos',
-        #     video_auto_advance=333333,
-        # )
-        #self.course_module = modulestore().get_course(self.course.id)
-
-
-    # FIXME tidy up this function, remove loggers, add doc
     def change_course_setting_autoadvance(self, new_value):
-        log.warning("before render1")
+        """
+        Change the .video_auto_advance course setting (a.k.a. advanced setting).
+        This avoids doing .save(), and instead modifies the instance directly.
+        Based on test code for video_bumper setting.
+        """
+        # This first render is done to initialize the instance
         self.item_descriptor.render(STUDENT_VIEW)
         item_instance = self.item_descriptor.xmodule_runtime.xmodule_instance
         item_instance.video_auto_advance = new_value
-        log.warning("before render2")
-
+        # After this step, render() should see the new value
+        # e.g. use self.item_descriptor.render(STUDENT_VIEW).content
 
     def test_is_autoadvance_enabled(self):
         """
@@ -1885,12 +1875,8 @@ class TestAutoAdvanceVideo(TestVideo):
             "ENABLE_AUTOADVANCE_VIDEOS": True,
         })
 
-        # FIXME enable at course-level, set to true. The following are attempts to do it. Delete until the -----
-        self.change_course_setting_autoadvance(929292)
-        self.change_course_setting_autoadvance(939393)
-        #--------------- end of FIXME (delete until here)
-
-
+        # enable at course-level, set to true
+        self.change_course_setting_autoadvance(new_value=True)
 
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
