@@ -1678,8 +1678,6 @@ class TestAutoAdvanceVideo(TestVideo):
     CATEGORY = "video"
     METADATA = {}
     FEATURES = settings.FEATURES
-    # FIXME remove maxDiff line
-    maxDiff = None
 
     def change_course_setting_autoadvance(self, new_value):
         """
