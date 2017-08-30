@@ -1,4 +1,4 @@
-(function(WAIT_TIMEOUT) {
+(function(undefined) {
     'use strict';
     describe('VideoAutoAdvance', function() {
         var state, oldOTBD;
@@ -36,4 +36,4 @@
         });
 
     });
-}).call(this, window.WAIT_TIMEOUT);
+}).call(this);
