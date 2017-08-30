@@ -1706,6 +1706,15 @@ class TestAutoAdvanceVideo(TestVideo):
         #self.course_module = modulestore().get_course(self.course.id)
 
 
+    # FIXME tidy up this function, remove loggers, add doc
+    def change_course_setting_autoadvance(self, new_value):
+        log.warning("before render1")
+        self.item_descriptor.render(STUDENT_VIEW)
+        item_instance = self.item_descriptor.xmodule_runtime.xmodule_instance
+        item_instance.video_auto_advance = new_value
+        log.warning("before render2")
+
+
     def test_is_autoadvance_enabled(self):
         """
         Check that the autoadvance is not available when it is disabled via feature flag
@@ -1914,12 +1923,8 @@ class TestAutoAdvanceVideo(TestVideo):
 
 
         # Trying different approach
-        log.warning("before render1")
-        self.item_descriptor.render(STUDENT_VIEW)
-        item_instance = self.item_descriptor.xmodule_runtime.xmodule_instance
-        item_instance.video_auto_advance = 919191 # *** AttributeError: 'VideoModuleWithMixins' object has no attribute 'video_auto_advance'
-
-        log.warning("before render2")
+        self.change_course_setting_autoadvance(929292)
+        self.change_course_setting_autoadvance(939393)
 
         #
         #--------------- end of FIXME (delete until here)
