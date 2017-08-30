@@ -33,6 +33,8 @@ from .test_video_xml import SOURCE_XML
 @attr(shard=1)
 class TestVideoYouTube(TestVideo):
     METADATA = {}
+    # FIXME remove maxDiff after testing
+    maxDiff = None
 
     def test_video_constructor(self):
         """Make sure that all parameters extracted correctly from xml"""
@@ -113,6 +115,8 @@ class TestVideoNonYouTube(TestVideo):
         'data': DATA,
     }
     METADATA = {}
+    # FIXME remove maxDiff after testing
+    maxDiff = None
 
     def test_video_constructor(self):
         """Make sure that if the 'youtube' attribute is omitted in XML, then
@@ -1545,6 +1549,8 @@ class TestVideoWithBumper(TestVideo):
     CATEGORY = "video"
     METADATA = {}
     FEATURES = settings.FEATURES
+    # FIXME remove maxDiff after testing
+    maxDiff = None
 
     @patch('xmodule.video_module.bumper_utils.get_bumper_settings')
     def test_is_bumper_enabled(self, get_bumper_settings):
