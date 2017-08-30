@@ -29,6 +29,7 @@ from .helpers import BaseTestXmodule
 from .test_video_handlers import TestVideo
 from .test_video_xml import SOURCE_XML
 
+
 @attr(shard=1)
 class TestVideoYouTube(TestVideo):
     METADATA = {}
@@ -1867,7 +1868,6 @@ class TestAutoAdvanceVideo(TestVideo):
 
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
-
 
         sources = [u'example.mp4', u'example.webm']
         expected_context = {
