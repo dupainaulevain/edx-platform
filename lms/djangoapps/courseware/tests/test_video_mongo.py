@@ -1941,10 +1941,59 @@ class TestAutoAdvanceVideo(TestVideo):
         # Now disable at course-level and check that it's disabled
         self.change_course_setting_autoadvance(new_value=False)
 
+        # same as before, but with autoAdvance:False
+        expected_context = {
+            'autoadvance_enabled': True,
+            'branding_info': None,
+            'license': None,
+            'cdn_eval': False,
+            'cdn_exp_group': None,
+            'display_name': u'A Name',
+            'download_video_link': u'example.mp4',
+            'handout': None,
+            'id': self.item_descriptor.location.html_id(),
+            'bumper_metadata': 'null',
+            'metadata': json.dumps(OrderedDict({
+                'autoAdvance': False,
+                'saveStateUrl': self.item_descriptor.xmodule_runtime.ajax_url + '/save_user_state',
+                'autoplay': False,
+                'streams': '0.75:jNCf2gIqpeE,1.00:ZwkTiUPN0mg,1.25:rsq9auxASqI,1.50:kMyNdzVHHgg',
+                'sub': 'a_sub_file.srt.sjson',
+                'sources': sources,
+                'poster': None,
+                'captionDataDir': None,
+                'showCaptions': 'true',
+                'generalSpeed': 1.0,
+                'speed': None,
+                'savedVideoPosition': 0.0,
+                'start': 3603.0,
+                'end': 3610.0,
+                'transcriptLanguage': 'en',
+                'transcriptLanguages': OrderedDict({'en': 'English', 'uk': u'Українська'}),
+                'ytTestTimeout': 1500,
+                'ytApiUrl': 'https://www.youtube.com/iframe_api',
+                'ytMetadataUrl': 'https://www.googleapis.com/youtube/v3/videos/',
+                'ytKey': None,
+                'transcriptTranslationUrl': self.item_descriptor.xmodule_runtime.handler_url(
+                    self.item_descriptor, 'transcript', 'translation/__lang__'
+                ).rstrip('/?'),
+                'transcriptAvailableTranslationsUrl': self.item_descriptor.xmodule_runtime.handler_url(
+                    self.item_descriptor, 'transcript', 'available_translations'
+                ).rstrip('/?'),
+                'autohideHtml5': False,
+                'recordedYoutubeIsAvailable': True,
+            })),
+            'track': None,
+            'transcript_download_format': u'srt',
+            'transcript_download_formats_list': [
+                {'display_name': 'SubRip (.srt) file', 'value': 'srt'},
+                {'display_name': 'Text (.txt) file', 'value': 'txt'}
+            ],
+            'poster': 'null'
+        }
 
         with override_settings(FEATURES=self.FEATURES):
             content = self.item_descriptor.render(STUDENT_VIEW).content
-        expected_context['metadata']['autoAdvance'] = False
         with override_settings(FEATURES=self.FEATURES):
             expected_content = self.item_descriptor.xmodule_runtime.render_template('video.html', expected_context)
         self.assertEqual(content, expected_content)
