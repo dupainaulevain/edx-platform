@@ -1548,7 +1548,8 @@ class TestVideoWithBumper(TestVideo):
     """
     CATEGORY = "video"
     METADATA = {}
-    FEATURES = settings.FEATURES
+    # Use temporary FEATURES in this test without affecting the original
+    FEATURES = dict(settings.FEATURES)
     # FIXME remove maxDiff after testing
     maxDiff = None
 
@@ -1684,7 +1685,8 @@ class TestAutoAdvanceVideo(TestVideo):
     """
     CATEGORY = "video"
     METADATA = {}
-    FEATURES = settings.FEATURES
+    # Use temporary FEATURES in this test without affecting the original
+    FEATURES = dict(settings.FEATURES)
 
     def change_course_setting_autoadvance(self, new_value):
         """
