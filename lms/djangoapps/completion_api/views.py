@@ -380,10 +380,36 @@ class CompletionDetailView(CompletionViewMixin, APIView):
 
 class CompletionBlockUpdateView(APIView):
     """
-    API view to mark blocks as completed.
-    This is a transitional implementation.
-    """
+    API view to mark any course block as completed.
 
+    **Request Format**
+
+        POST /api/completion/v0/course/<course_key>/blocks/<block_key>/
+
+    **Example Requests**
+
+        POST /api/completion/v0/course/UniversityX/CS101/2017_T1/blocks/i4x://UniversityX/CS101/html/f5a3dacbac164ac9b7d2b43f3cc1db26/
+
+    **Parameters**
+
+        completed:
+            Must be exactly equal to the integer 1. This is to ensure
+            forward-compatibility with the next iteration of the
+            Completion API.
+
+    **Returns**
+
+        * 200 if the request is valid but the object exists already.
+        * 201 if a CourseModuleCompletion object is created.
+        * 403 if a user who does not have permission to masquerade as another
+          user specifies a username other than their own.
+        * 404 if the course is not available or the requesting user can see no
+          completable sections.
+
+    This is a transitional implementation that uses the
+    edx-solutions/progress-edx-platform-extensions models as a backing store.
+    The replacement will have the same interface.
+    """
     authentication_classes = (
         authentication.OAuth2AuthenticationAllowInactiveUser,
         authentication.SessionAuthenticationAllowInactiveUser
@@ -392,7 +418,7 @@ class CompletionBlockUpdateView(APIView):
 
     def post(self, request, course_id, usage_id):
         """
-        Handler for GET requests. Attempts to be forward-compatible with the completion API.
+        Handler for POST requests. Attempts to be forward-compatible with the completion API.
         """
         try:
             completion = float(request.data.get('completion'))
