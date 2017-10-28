@@ -118,19 +118,19 @@ from openedx.core.lib.courses import course_image_url
         </div>
 
         <div class="main-cta">
-        %if user.is_authenticated() and registered:
-          %if show_courseware_link:
+        % if user.is_authenticated() and registered:
+          % if show_courseware_link:
             <a href="${course_target}">
-          %endif
+          % endif
 
           <span class="register disabled">${_("You are enrolled in this course")}</span>
 
-          %if show_courseware_link:
+          % if show_courseware_link:
             <strong>${_("View Course")}</strong>
             </a>
           %endif
 
-        %elif in_cart:
+        % elif in_cart:
           <span class="add-to-cart">
             ${_('This course is in your <a href="{cart_link}">cart</a>.').format(cart_link=cart_link)}
           </span>
@@ -145,7 +145,7 @@ from openedx.core.lib.courses import course_image_url
         ## so that they can register and become a real user that can enroll.
         % elif not is_shib_course and not can_enroll:
           <span class="register disabled">${_("Enrollment is Closed")}</span>
-        %elif can_add_course_to_cart:
+        % elif can_add_course_to_cart:
           <%
           if user.is_authenticated():
             reg_href = "#"
@@ -163,7 +163,7 @@ from openedx.core.lib.courses import course_image_url
               .format(course_name=course.display_number_with_default, price=course_price)}
           </a>
           <div id="register_error"></div>
-        %else:
+        % else:
           <% 
             if ecommerce_checkout:
               reg_href = ecommerce_checkout_link
@@ -259,10 +259,12 @@ from openedx.core.lib.courses import course_image_url
             % endif
 
           % if get_course_about_section(request, course, "effort"):
-            <li class="important-dates-item"><span class="icon fa fa-pencil" aria-hidden="true"></span><p class="important-dates-item-title">${_("Estimated Effort")}</p><span class="important-dates-item-text effort">${get_course_about_section(request, course, "effort")}</span></li>
+            <li class="important-dates-item">
+              <span class="icon fa fa-pencil" aria-hidden="true"></span>
+              <p class="important-dates-item-title">${_("Estimated Effort")}</p>
+              <span class="important-dates-item-text effort">${get_course_about_section(request, course, "effort")}</span>
+            </li>
           % endif
-
-          ##<li class="important-dates-item"><span class="icon fa fa-clock-o" aria-hidden="true"></span><p class="important-dates-item-title">${_('Course Length')}</p><span class="important-dates-item-text course-length">${_('{number} weeks').format(number=15)}</span></li>
 
           %if course_price and (can_add_course_to_cart or is_cosmetic_price_enabled):
             <li class="important-dates-item">
@@ -288,9 +290,16 @@ from openedx.core.lib.courses import course_image_url
             </p>
           </li>
           % endif
+
           % if get_course_about_section(request, course, "prerequisites"):
-            <li class="important-dates-item"><span class="icon fa fa-book" aria-hidden="true"></span><p class="important-dates-item-title">${_("Requirements")}</p><span class="important-dates-item-text prerequisites">${get_course_about_section(request, course, "prerequisites")}</span></li>
+            <li class="important-dates-item">
+              <span class="icon fa fa-book" aria-hidden="true"></span>
+              <p class="important-dates-item-title">${_("Requirements")}</p>
+              <span class="important-dates-item-text prerequisites">${get_course_about_section(request, course, "prerequisites")}</span>
+            </li>
           % endif
+
+          <%block name="additional-sidebar-items"/>
         </ol>
     </div>
 
