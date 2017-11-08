@@ -269,6 +269,10 @@ FEATURES = {
     # Let students save and manage their annotations
     'ENABLE_EDXNOTES': False,
 
+    # Show site-level announcements on the course dashboard
+    'ENABLE_ANNOUNCEMENTS': False,
+    'ANNOUNCEMENTS_PER_PAGE': 5,
+
     # Milestones application flag
     'MILESTONES_APP': False,
 
@@ -2265,6 +2269,7 @@ INSTALLED_APPS = [
     'lms.djangoapps.course_goals',
 
     # Features
+    'openedx.features.announcements',
     'openedx.features.course_bookmarks',
     'openedx.features.course_experience',
     'openedx.features.course_search',

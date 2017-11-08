@@ -1,0 +1,64 @@
+{% block title %}{{_("Manage Announcements")}}{% endblock %}
+
+<div class="content">
+  <div class="content-primary announcements-list">
+    <div class="announcements-list">
+      <div class="announcement-label">Content</div>
+      <div class="announcement-label">Active</div>
+      {% for announcement in announcement_list %}
+        <div class="announcement-item">
+          <div class="announcement-content">
+            {{announcement.content | safe}}
+          </div>
+          <div class="announcement-active">
+            {% if announcement.active %}{{_("Enabled")}}{% else %}{{_("Disabled")}}{% endif %}
+          </div>
+          <a href="{% url 'announcements:announcements_edit' pk=announcement.pk %}">
+            <button>{{_("Edit")}}</button>
+          </a>
+          <a href="{% url 'announcements:announcements_delete' pk=announcement.pk %}">
+            <button>{{_("Delete")}}</button>
+          </a>
+        </div>
+      {% empty %}
+        <div id="announcement-item">
+          {{_("No Announcements yet.")}}
+        </div>
+      {% endfor %}
+      <a href="{% url 'announcements:announcements_create' %}">
+        <button>{{_("Add New Announcement")}}</button>
+      </a>
+    </div>
+
+    {% if is_paginated %}
+    <div class="pagination">
+      <span class="step-links">
+        <div class="current">
+          Page {{ page_obj.number }} of {{ paginator.num_pages }}.
+        </div>
+
+        <a
+          {% if page_obj.has_previous %}
+              href="{{ page_obj.previous_page_number }}"
+          {% else %}
+              disabled="disabled"
+          {% endif %}
+          >
+            <button>previous</button>
+        </a>
+
+        <a
+          {% if page_obj.has_next %}
+              href="{{ page_obj.next_page_number }}"
+          {% else %}
+              disabled
+          {% endif %}
+          >
+            <button>next</button>
+        </a>
+      </span>
+    </div>
+    {% endif %}
+  </div>
+
+</div>

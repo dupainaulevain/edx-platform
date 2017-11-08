@@ -1,0 +1,41 @@
+{% load static %}
+
+{% block title %}{{_("Edit Announcement")}}{% endblock %}
+
+{% block content %}
+<div class="wrapper-content wrapper announcements-editor">
+  <section class="content activation is-active">
+    <form method="post" action="{% url 'announcements:announcements_edit' pk=announcement.pk %}">
+      {% csrf_token %}
+
+      <div class="announcement-content">
+        <textarea id="announcement" name="content">{{announcement.content}}</textarea>
+      </div>
+
+      <div class="announcement-active">
+        <label for="active">{{_("Is Active:")}}</label>
+        <input type="checkbox" name="active" {% if announcement.active %}checked{% endif %} />
+      </div>
+
+      <button class="save-announcement">{{_("Save")}}</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block js_extra %}
+<script src="{% static "js/vendor/tinymce/js/tinymce/tinymce.full.min.js" %}"></script>
+
+<script type="text/javascript">
+  tinymce.init({
+    selector: "textarea",
+    branding: false,
+    plugins: [
+      "advlist autolink lists link image charmap print preview anchor",
+      "searchreplace visualblocks code fullscreen",
+      "insertdatetime media table contextmenu paste"
+    ],
+    toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image"
+  });
+</script>
+{% endblock %}
