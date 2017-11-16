@@ -13,3 +13,5 @@ The **master** branch of this repository is meaningless - do not
 refer to it nor use it as a base branch for changes to edx-platform.
 Always use the edx/edx-platform master branch as a
 starting point, or whatever other branch is appropriate.
+
+This is actually a test of the "watched fork" features, to see whether it creates a WatchedPullRequest. This PR itself can be closed.
