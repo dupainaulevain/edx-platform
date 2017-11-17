@@ -4,13 +4,14 @@ Unit tests for the announcements feature.
 
 import json
 import unittest
+from mock import patch
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.test.client import Client
 from django.core.urlresolvers import reverse
 
-from student.tests.factories import UserFactory, AdminFactory
+from student.tests.factories import AdminFactory
 
 from openedx.features.announcements.models import Announcement
 
@@ -22,11 +23,7 @@ TEST_ANNOUNCEMENTS = [
     ("<a>Other Formatted Announcement</a>", True),
 ]
 
-MODIFIED_FEATURES = settings.FEATURES.copy()
-MODIFIED_FEATURES["ENABLE_ANNOUNCEMENTS"] = True
 
-
-@override_settings(FEATURES=MODIFIED_FEATURES)
 @unittest.skipUnless(settings.ROOT_URLCONF == 'lms.urls', 'Test only valid in lms')
 class TestGlobalAnnouncements(TestCase):
     """
@@ -49,7 +46,7 @@ class TestGlobalAnnouncements(TestCase):
         )
         self.client.login(username=self.admin.username, password='pass')
 
-    @override_settings(FEATURES=settings.FEATURES)
+    @patch.dict(settings.FEATURES, {'ENABLE_ANNOUNCEMENTS': False})
     def test_feature_flag_disabled(self):
         """Ensures that the default settings effectively disables the feature"""
         response = self.client.get('/dashboard')
@@ -62,7 +59,7 @@ class TestGlobalAnnouncements(TestCase):
         self.assertIn('AnnouncementsView', response.content)
 
     def test_pagination(self):
-        url = reverse("announcements:announcements_page", kwargs={"page": 1})
+        url = reverse("announcements_page", kwargs={"page": 1})
         response = self.client.get(url)
         data = json.loads(response.content)
         self.assertEquals(data['num_pages'], 1)
@@ -76,7 +73,7 @@ class TestGlobalAnnouncements(TestCase):
         """
         Ensures that active announcements are visible on the dashboard
         """
-        url = reverse("announcements:announcements_page", kwargs={"page": 1})
+        url = reverse("announcements_page", kwargs={"page": 1})
         response = self.client.get(url)
         self.assertIn("Active Announcement", response.content)
 
@@ -84,7 +81,7 @@ class TestGlobalAnnouncements(TestCase):
         """
         Ensures that inactive announcements aren't visible on the dashboard
         """
-        url = reverse("announcements:announcements_page", kwargs={"page": 1})
+        url = reverse("announcements_page", kwargs={"page": 1})
         response = self.client.get(url)
         self.assertNotIn("Inactive Announcement", response.content)
 
@@ -92,12 +89,11 @@ class TestGlobalAnnouncements(TestCase):
         """
         Ensures that formatting in announcements is rendered properly
         """
-        url = reverse("announcements:announcements_page", kwargs={"page": 1})
+        url = reverse("announcements_page", kwargs={"page": 1})
         response = self.client.get(url)
         self.assertIn("<strong>Formatted Announcement</strong>", response.content)
 
 
-@override_settings(FEATURES=MODIFIED_FEATURES)
 @unittest.skipUnless(settings.ROOT_URLCONF == 'cms.urls', 'Test only valid in studio')
 class TestGlobalAnnouncementsStudio(TestCase):
     """
@@ -117,7 +113,7 @@ class TestGlobalAnnouncementsStudio(TestCase):
         """
         Test create announcement view
         """
-        url = reverse("announcements:announcements_create")
+        url = reverse("openedx.announcements.announcements_create")
         self.client.post(url, {"content": "Test Create Announcement", "active": True})
         result = Announcement.objects.filter(content="Test Create Announcement").exists()
         self.assertTrue(result)
@@ -128,7 +124,7 @@ class TestGlobalAnnouncementsStudio(TestCase):
         """
         announcement = Announcement.objects.create(content="test")
         announcement.save()
-        url = reverse("announcements:announcements_edit", kwargs={"pk":announcement.pk})
+        url = reverse("openedx.announcements.announcements_edit", kwargs={"pk": announcement.pk})
         response = self.client.get(url)
         self.assertIn('<div class="wrapper-content wrapper announcements-editor">', response.content)
         self.client.post(url, {"content": "Test Edit Announcement", "active": True})
@@ -141,7 +137,7 @@ class TestGlobalAnnouncementsStudio(TestCase):
         """
         announcement = Announcement.objects.create(content="Test Delete")
         announcement.save()
-        url = reverse("announcements:announcements_delete", kwargs={"pk":announcement.pk})
+        url = reverse("openedx.announcements.announcements_delete", kwargs={"pk": announcement.pk})
         self.client.get(url)
         result = Announcement.objects.filter(content="Test Edit Announcement").exists()
         self.assertFalse(result)

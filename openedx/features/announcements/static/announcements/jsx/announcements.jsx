@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import Button from '@edx/paragon/src/Button/index.jsx';
+import { Button } from '@edx/paragon';
 
 
 class Announcement extends React.Component {
@@ -66,7 +66,7 @@ class AnnouncementList extends React.Component {
         <Button
           className={["announcement-button", "prev"]}
           onClick={() => this.renderPrevPage()}
-          display="← previous"
+          label="← previous"
         />
       );
     }
@@ -76,7 +76,7 @@ class AnnouncementList extends React.Component {
         <Button
           className={["announcement-button", "next"]}
           onClick={() => this.renderNextPage()}
-          display="next →"
+          label="next →"
         />
       );
     }

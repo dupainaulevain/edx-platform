@@ -239,6 +239,7 @@ FEATURES = {
     'ENABLE_OTHER_COURSE_SETTINGS': False,
 
     # Configure number of announcements to show per page
+    'ENABLE_ANNOUNCEMENTS': False,
     'ANNOUNCEMENTS_PER_PAGE': 5,
 
     # Enable support for content libraries. Note that content libraries are

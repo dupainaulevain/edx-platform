@@ -240,7 +240,7 @@ if settings.FEATURES.get('CERTIFICATES_HTML_VIEW'):
 
 if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
     urlpatterns.append(
-        url(r'^announcements/', include('openedx.features.announcements.urls', namespace='announcements'))
+        url(r'^announcements/', include('openedx.features.announcements.urls_cms', namespace='announcements'))
     )
 
 # Maintenance Dashboard

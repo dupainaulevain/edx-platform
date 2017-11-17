@@ -63,7 +63,7 @@ class AnnouncementEditView(EdxFragmentView):
         """
         Update Announcement from POST data
         """
-        announcement, created = Announcement.objects.get_or_create(pk=kwargs.get('pk'))
+        announcement, _ = Announcement.objects.get_or_create(pk=kwargs.get('pk'))
         announcement.content = request.POST.get('content', "")
         announcement.active = request.POST.get('active', False)
         announcement.save()
@@ -77,6 +77,11 @@ class AnnouncementDeleteView(EdxFragmentView, DeleteView):
     model = Announcement
     template_name = "announcements/announcement_delete.html"
     success_url = reverse_lazy('announcements:announcements_list')
+
+    def __init__(self, *args, **kwargs):
+        super(AnnouncementDeleteView, self).__init__(*args, **kwargs)
+        self.object = None
+
     def render_to_fragment(self, request, **kwargs):
         """
         Render delete confirmation page
@@ -94,7 +99,7 @@ class AnnouncementsJSONView(ListView):
     object_list = Announcement.objects.filter(active=True)
     paginate_by = settings.FEATURES.get('ANNOUNCEMENTS_PER_PAGE', 3)
 
-    def get(self, request, **kwargs):
+    def get(self, request, *args, **kwargs):
         """
         Return active announcements as json
         """

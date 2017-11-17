@@ -168,7 +168,7 @@ if settings.FEATURES.get('ENABLE_SYSADMIN_DASHBOARD'):
 
 if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
     urlpatterns.append(
-        url(r'^announcements/', include('openedx.features.announcements.urls_lms', namespace='announcements'))
+        url(r'^announcements/', include('openedx.features.announcements.urls'))
     )
 
 urlpatterns += [

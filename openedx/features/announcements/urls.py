@@ -1,32 +1,16 @@
 """
-Defines URLs for announcements.
+Defines URLs for announcements in the LMS.
 """
 
-from django.conf.urls import patterns, url
-from util.views import require_global_staff
+from django.conf.urls import url
+from django.contrib.auth.decorators import login_required
 
-from .views import AnnouncementsView, AnnouncementEditView, AnnouncementDeleteView
+from .views import AnnouncementsJSONView
 
-urlpatterns = patterns(
-    'openedx.features.announcements.views',
+urlpatterns = [
     url(
-        r'^(?P<page>\d+)?$',
-        require_global_staff(AnnouncementsView.as_view()),
-        name='announcements_list',
+        r'^page/(?P<page>\d+)$',
+        login_required(AnnouncementsJSONView.as_view()),
+        name='announcements_page',
     ),
-    url(
-        r'^create$',
-        require_global_staff(AnnouncementEditView.as_view()),
-        name='announcements_create',
-    ),
-    url(
-        r'^edit/(?P<pk>\d+)?$',
-        require_global_staff(AnnouncementEditView.as_view()),
-        name='announcements_edit',
-    ),
-    url(
-        r'^delete/(?P<pk>\d+)?$',
-        require_global_staff(AnnouncementDeleteView.as_view()),
-        name='announcements_delete',
-    ),
-)
+]
