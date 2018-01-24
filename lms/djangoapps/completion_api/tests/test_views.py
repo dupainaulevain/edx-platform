@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 from oauth2_provider import models as dot_models
 from rest_framework.test import APIClient
 from unittest import expectedFailure
+import ddt
 
 from opaque_keys.edx.keys import UsageKey
 from progress import models
@@ -373,3 +374,70 @@ class CompletionBlockUpdateViewTestCase(SharedModuleStoreTestCase):
         self.client.force_authenticate(None)
         response = self.client.post(self.update_url, {'completion': 1})
         self.assertEqual(response.status_code, 401)
+
+
+@ddt.ddt
+class CompletionMobileViewTestCase(SharedModuleStoreTestCase):
+    """
+    Test that the CompletionView with mobile courses.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super(CompletionMobileViewTestCase, cls).setUpClass()
+        cls.none_mobile_course = ToyCourseFactory.create()
+        cls.mobile_course = ToyCourseFactory.create(mobile_available=True, course='mobile', run='2018_Spring')
+
+    def setUp(self):
+        super(CompletionMobileViewTestCase, self).setUp()
+        self.test_user = UserFactory.create()
+        CourseEnrollment.enroll(self.test_user, self.mobile_course.id)
+        CourseEnrollment.enroll(self.test_user, self.none_mobile_course.id)
+        self.mobile_client = APIClient()
+        self.mobile_client.force_authenticate(user=self.test_user)
+
+    @ddt.data(
+        (
+            1,
+            [
+                {
+                    'course_key': 'edX/mobile/2018_Spring',
+                    'completion': {
+                        'earned': 1,
+                        'possible': 0,
+                        'ratio': 0,
+                    },
+                }
+            ]
+        ),
+        (
+            2,
+            [
+                {
+                    'course_key': 'edX/mobile/2018_Spring',
+                    'completion': {
+                        'earned': 1,
+                        'possible': 0,
+                        'ratio': 0,
+                    },
+                },
+                {
+                    'course_key': 'edX/toy/2012_Fall',
+                    'completion': {
+                        'earned': 0,
+                        'possible': 12.0,
+                        'ratio': 0,
+                    },
+                }
+            ]
+        )
+    )
+    @ddt.unpack
+    def test_list_view_mobile_only(self, expected_count, expected_results):
+        response = self.mobile_client.get('/api/completion/v0/course/')
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'pagination': {'count': expected_count, 'previous': None, 'num_pages': 1, 'next': None},
+            'results': expected_results,
+        }
+        self.assertEqual(response.data, expected)  # pylint: disable=no-member
