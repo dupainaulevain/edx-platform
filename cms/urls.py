@@ -238,11 +238,6 @@ if settings.FEATURES.get('CERTIFICATES_HTML_VIEW'):
             certificates_list_handler, name='certificates_list_handler')
     ]
 
-if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
-    urlpatterns.append(
-        url(r'^announcements/', include('openedx.features.announcements.urls_cms', namespace='announcements'))
-    )
-
 # Maintenance Dashboard
 urlpatterns.append(url(r'^maintenance/', include('maintenance.urls', namespace='maintenance')))
 
