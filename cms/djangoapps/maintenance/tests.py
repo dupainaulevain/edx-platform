@@ -79,8 +79,7 @@ class MaintenanceViewAccessTests(MaintenanceViewTestCase):
     """
     Tests for access control of maintenance views.
     """
-    @ddt.data(MAINTENANCE_URLS)
-    @ddt.unpack
+    @ddt.data(*MAINTENANCE_URLS)
     def test_require_login(self, url):
         """
         Test that maintenance app requires user login.
@@ -97,8 +96,7 @@ class MaintenanceViewAccessTests(MaintenanceViewTestCase):
 
         self.assertRedirects(response, redirect_url)
 
-    @ddt.data(MAINTENANCE_URLS)
-    @ddt.unpack
+    @ddt.data(*MAINTENANCE_URLS)
     def test_global_staff_access(self, url):
         """
         Test that all maintenance app views are accessible to global staff user.
@@ -106,8 +104,7 @@ class MaintenanceViewAccessTests(MaintenanceViewTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-    @ddt.data(MAINTENANCE_URLS)
-    @ddt.unpack
+    @ddt.data(*MAINTENANCE_URLS)
     def test_non_global_staff_access(self, url):
         """
         Test that all maintenance app views are not accessible to non-global-staff user.
