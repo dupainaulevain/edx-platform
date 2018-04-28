@@ -24,6 +24,7 @@ from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 
 from openedx.features.announcements.models import Announcement
+from openedx.features.announcements.forms import AnnouncementForm
 
 log = logging.getLogger(__name__)
 
@@ -228,11 +229,20 @@ class ForcePublishCourseView(MaintenanceBaseView):
         return self.render_response()
 
 
+class AnnouncementBaseView(View):
+    """
+    Base view for Announcements pages
+    """
+
+    @method_decorator(require_global_staff)
+    def dispatch(self, request, *args, **kwargs):
+        return super(AnnouncementBaseView, self).dispatch(request, *args, **kwargs)
+
+
 class AnnouncementIndexView(ListView, MaintenanceBaseView):
     """
     View for viewing the announcements shown on the dashboard, used by the global staff.
     """
-
     model = Announcement
     object_list = Announcement.objects.all()
     context_object_name = 'announcement_list'
@@ -241,65 +251,53 @@ class AnnouncementIndexView(ListView, MaintenanceBaseView):
     def __init__(self):
         super(AnnouncementIndexView, self).__init__(MAINTENANCE_VIEWS['announcement_index'])
 
+    def get_context_data(self, **kwargs):
+        context = super(AnnouncementIndexView, self).get_context_data(**kwargs)
+        context['view'] = MAINTENANCE_VIEWS['announcement_index']
+        return context
+
     @method_decorator(require_global_staff)
     def get(self, request, *args, **kwargs):
         if "limit" in request.GET.keys():
-            self.paginate_by = request.GET.get("limit")
+            self.paginate_by = max(request.GET.get("limit"), 50)
         context = self.get_context_data()
-        context['view'] = MAINTENANCE_VIEWS['announcement_index']
         return render_to_response(self.template, context)
 
 
-class AnnouncementEditView(UpdateView, MaintenanceBaseView):
+class AnnouncementEditView(UpdateView, AnnouncementBaseView):
     """
     View for editing an announcement.
     """
     model = Announcement
-    fields = ['content', 'active']
+    form_class = AnnouncementForm
     success_url = '/maintenance/announcements'
-    template = '/maintenance/_announcement_edit.html'
+    template_name = '/maintenance/_announcement_edit.html'
 
-    @method_decorator(require_global_staff)
-    def dispatch(self, request, *args, **kwargs):
-        return super(AnnouncementEditView, self).dispatch(request, *args, **kwargs)
-
-    @method_decorator(require_global_staff)
-    def get(self, request, *args, **kwargs):
-        super(AnnouncementEditView, self).get(request, *args, **kwargs)
-        context = self.get_context_data()
+    def get_context_data(self, **kwargs):
+        context = super(AnnouncementEditView, self).get_context_data(**kwargs)
         context['action_url'] = reverse('maintenance:announcement_edit', kwargs={'pk': context['announcement'].pk})
-        return render_to_response(self.template, context)
+        return context
 
 
-class AnnouncementCreateView(CreateView, MaintenanceBaseView):
+class AnnouncementCreateView(CreateView, AnnouncementBaseView):
     """
     View for creating an announcement.
     """
     model = Announcement
-    fields = ['content']
+    form_class = AnnouncementForm
     success_url = '/maintenance/announcements'
-    template = '/maintenance/_announcement_edit.html'
+    template_name = '/maintenance/_announcement_edit.html'
 
-    @method_decorator(require_global_staff)
-    def dispatch(self, request, *args, **kwargs):
-        return super(AnnouncementCreateView, self).dispatch(request, *args, **kwargs)
-
-    @method_decorator(require_global_staff)
-    def get(self, request, *args, **kwargs):
-        super(AnnouncementCreateView, self).get(request, *args, **kwargs)
-        context = self.get_context_data()
+    def get_context_data(self, **kwargs):
+        context = super(AnnouncementCreateView, self).get_context_data(**kwargs)
         context['action_url'] = reverse('maintenance:announcement_create')
-        return render_to_response(self.template, context)
+        return context
 
 
-class AnnouncementDeleteView(DeleteView, MaintenanceBaseView):
+class AnnouncementDeleteView(DeleteView, AnnouncementBaseView):
     """
-    View for creating an announcement.
+    View for deleting an announcement.
     """
     model = Announcement
     success_url = '/maintenance/announcements'
     template_name = '/maintenance/_announcement_delete.html'
-
-    @method_decorator(require_global_staff)
-    def dispatch(self, request, *args, **kwargs):
-        return super(AnnouncementDeleteView, self).dispatch(request, *args, **kwargs)

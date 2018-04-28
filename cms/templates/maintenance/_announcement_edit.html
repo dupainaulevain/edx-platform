@@ -19,17 +19,7 @@ from openedx.core.djangolib.markup import HTML, Text
             <div class="wrapper-form announcement-container">
                 <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}"/>
                 <div class="announcement-item">
-                    <textarea name="content" class="announcement-content">
-                        ${getattr(announcement, "content", "") | n}
-                    </textarea>
-                    <div class="actions-list">
-                        <label for="active">${_('Is Active')}</label>
-                        <input type="checkbox" name="active" class="announcement-active"
-                            %if announcement.active:
-                                checked
-                            %endif
-                         />
-                    </div>
+                  ${form.as_p() | n}
                 </div>
                 <div class="actions">
                     <button type="submit" class="action action-primary">${_('Save')}</button>
@@ -44,14 +34,14 @@ from openedx.core.djangolib.markup import HTML, Text
   <script src="${STATIC_URL}js/vendor/tinymce/js/tinymce/tinymce.full.min.js"></script>
   <script type="text/javascript">
       tinymce.init({
-          selector: ".announcement-content",
+          selector: "#id_content",
           branding: false,
           plugins: [
               "advlist autolink lists link image charmap print preview anchor",
               "searchreplace visualblocks code fullscreen",
-              "insertdatetime media table contextmenu paste save"
+              "insertdatetime media table contextmenu paste"
           ],
-          toolbar: "save | insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image"
+          toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image"
       });
   </script>
 </%block>
