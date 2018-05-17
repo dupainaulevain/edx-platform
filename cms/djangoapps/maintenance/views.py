@@ -3,7 +3,7 @@ Views for the maintenance app.
 """
 import logging
 
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.core.validators import ValidationError
 from django.db import transaction
 from django.utils.decorators import method_decorator
@@ -270,7 +270,7 @@ class AnnouncementEditView(UpdateView, AnnouncementBaseView):
     """
     model = Announcement
     form_class = AnnouncementForm
-    success_url = '/maintenance/announcements'
+    success_url = reverse_lazy('maintenance:announcement_index')
     template_name = '/maintenance/_announcement_edit.html'
 
     def get_context_data(self, **kwargs):
@@ -285,7 +285,7 @@ class AnnouncementCreateView(CreateView, AnnouncementBaseView):
     """
     model = Announcement
     form_class = AnnouncementForm
-    success_url = '/maintenance/announcements'
+    success_url = reverse_lazy('maintenance:announcement_index')
     template_name = '/maintenance/_announcement_edit.html'
 
     def get_context_data(self, **kwargs):
@@ -299,5 +299,5 @@ class AnnouncementDeleteView(DeleteView, AnnouncementBaseView):
     View for deleting an announcement.
     """
     model = Announcement
-    success_url = '/maintenance/announcements'
+    success_url = reverse_lazy('maintenance:announcement_index')
     template_name = '/maintenance/_announcement_delete.html'
