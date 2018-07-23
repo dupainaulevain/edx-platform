@@ -111,6 +111,10 @@ class LibraryContentFields(object):
         default=[],
         scope=Scope.user_state,
     )
+    _selection_done = Boolean(
+        default=False,
+        scope=Scope.user_state,
+    )
     has_children = True
 
     @property
@@ -132,7 +136,6 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
     as children of this block, but only a subset of those children are shown to
     any particular student.
     """
-
     @classmethod
     def make_selection(cls, selected, children, max_count, mode):
         """
@@ -273,9 +276,9 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
         actual BlockUsageLocators, it is necessary to use self.children,
         because the block_ids alone do not specify the block type.
         """
-        if hasattr(self, "_selected_set"):
+        if self._selection_done:
             # Already done:
-            return self._selected_set  # pylint: disable=access-member-before-definition
+            return self.selected
 
         block_keys = self.make_selection(self.selected, self.children, self.max_count, "random")  # pylint: disable=no-member
 
@@ -289,11 +292,10 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
         )
 
         # Save our selections to the user state, to ensure consistency:
-        selected = block_keys['selected']
-        self.selected = list(selected)  # TODO: this doesn't save from the LMS "Progress" page.
-        # Cache the results
-        self._selected_set = selected  # pylint: disable=attribute-defined-outside-init
-
+        selected = list(block_keys['selected'])
+        random.shuffle(selected)
+        self.selected = selected  # TODO: this doesn't save from the LMS "Progress" page.
+        self._selection_done = True
         return selected
 
     def _get_selected_child_blocks(self):
