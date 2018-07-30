@@ -16,7 +16,7 @@ from six import text_type
 from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock
-from xblock.fields import Integer, List, Scope, String
+from xblock.fields import Boolean, Integer, List, Scope, String
 
 from capa.responsetypes import registry
 from xmodule.studio_editable import StudioEditableDescriptor, StudioEditableModule
