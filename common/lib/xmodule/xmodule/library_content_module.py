@@ -111,10 +111,6 @@ class LibraryContentFields(object):
         default=[],
         scope=Scope.user_state,
     )
-    _selection_done = Boolean(
-        default=False,
-        scope=Scope.user_state,
-    )
     has_children = True
 
     @property
@@ -276,10 +272,6 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
         actual BlockUsageLocators, it is necessary to use self.children,
         because the block_ids alone do not specify the block type.
         """
-        if self._selection_done:
-            # Already done:
-            return self.selected
-
         block_keys = self.make_selection(self.selected, self.children, self.max_count, "random")  # pylint: disable=no-member
 
         # Publish events for analytics purposes:
@@ -291,12 +283,14 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
             self._publish_event,
         )
 
+        current_selections = set(tuple(x) for x in self.selected)
+        if current_selections != block_keys['selected']:
         # Save our selections to the user state, to ensure consistency:
-        selected = list(block_keys['selected'])
-        random.shuffle(selected)
-        self.selected = selected  # TODO: this doesn't save from the LMS "Progress" page.
-        self._selection_done = True
-        return selected
+            selected = list(block_keys['selected'])
+            random.shuffle(selected)
+            self.selected = selected  # TODO: this doesn't save from the LMS "Progress" page.
+
+        return self.selected
 
     def _get_selected_child_blocks(self):
         """
