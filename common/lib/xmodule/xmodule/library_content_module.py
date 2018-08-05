@@ -285,7 +285,7 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
 
         current_selections = set(tuple(x) for x in self.selected)
         if current_selections != block_keys['selected']:
-        # Save our selections to the user state, to ensure consistency:
+            # Save our selections to the user state, to ensure consistency:
             selected = list(block_keys['selected'])
             random.shuffle(selected)
             self.selected = selected  # TODO: this doesn't save from the LMS "Progress" page.
