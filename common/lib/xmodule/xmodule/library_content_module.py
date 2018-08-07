@@ -264,12 +264,12 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
 
     def selected_children(self):
         """
-        Returns a set() of block_ids indicating which of the possible children
+        Returns a list() of block_ids indicating which of the possible children
         have been selected to display to the current user.
 
         This reads and updates the "selected" field, which has user_state scope.
 
-        Note: self.selected and the return value contain block_ids. To get
+        Note: the return value (self.selected) contains block_ids. To get
         actual BlockUsageLocators, it is necessary to use self.children,
         because the block_ids alone do not specify the block type.
         """
