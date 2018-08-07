@@ -269,6 +269,8 @@ class LibraryContentModuleTestMixin(object):
         Helper method that changes the max_count of self.lc_block, refreshes
         children, and asserts that the number of selected children equals the count provided.
         """
+        # Clear the cache (only needed because we skip saving/re-loading the block) pylint: disable=protected-access
+        self.lc_block._xmodule
         self.lc_block.max_count = count
         selected = self.lc_block.get_child_descriptors()
         self.assertEqual(len(selected), count)
