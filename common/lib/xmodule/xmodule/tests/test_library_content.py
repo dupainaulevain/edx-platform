@@ -269,8 +269,6 @@ class LibraryContentModuleTestMixin(object):
         Helper method that changes the max_count of self.lc_block, refreshes
         children, and asserts that the number of selected children equals the count provided.
         """
-        # Clear the cache (only needed because we skip saving/re-loading the block) pylint: disable=protected-access
-        self.lc_block._xmodule._selection_done = False
         self.lc_block.max_count = count
         selected = self.lc_block.get_child_descriptors()
         self.assertEqual(len(selected), count)
@@ -393,8 +391,6 @@ class TestLibraryContentAnalytics(LibraryContentTest):
 
         # Now increase max_count so that one more child will be added:
         self.lc_block.max_count = 2
-        # Clear the cache (only needed because we skip saving/re-loading the block) pylint: disable=protected-access
-        self.lc_block._xmodule._selection_done = False
         children = self.lc_block.get_child_descriptors()
         self.assertEqual(len(children), 2)
         child, new_child = children if children[0].location == child.location else reversed(children)
@@ -474,8 +470,6 @@ class TestLibraryContentAnalytics(LibraryContentTest):
         self.lc_block.get_child_descriptors()  # This line is needed in the test environment or the change has no effect
         self.publisher.reset_mock()  # Clear the "assigned" event that was just published.
         self.lc_block.max_count = 0
-        # Clear the cache (only needed because we skip saving/re-loading the block) pylint: disable=protected-access
-        self.lc_block._xmodule._selection_done = False
 
         # Check that the event says that one block was removed, leaving no blocks left:
         children = self.lc_block.get_child_descriptors()
@@ -493,8 +487,6 @@ class TestLibraryContentAnalytics(LibraryContentTest):
         # Start by assigning two blocks to the student:
         self.lc_block.get_child_descriptors()  # This line is needed in the test environment or the change has no effect
         self.lc_block.max_count = 2
-        # Clear the cache (only needed because we skip saving/re-loading the block) pylint: disable=protected-access
-        self.lc_block._xmodule._selection_done = False
         initial_blocks_assigned = self.lc_block.get_child_descriptors()
         self.assertEqual(len(initial_blocks_assigned), 2)
         self.publisher.reset_mock()  # Clear the "assigned" event that was just published.
@@ -508,8 +500,6 @@ class TestLibraryContentAnalytics(LibraryContentTest):
         self.library.children = [keep_block_lib_usage_key]
         self.store.update_item(self.library, self.user_id)
         self.lc_block.refresh_children()
-        # Clear the cache (only needed because we skip saving/re-loading the block) pylint: disable=protected-access
-        self.lc_block._xmodule._selection_done = False
 
         # Check that the event says that one block was removed, leaving one block left:
         children = self.lc_block.get_child_descriptors()
