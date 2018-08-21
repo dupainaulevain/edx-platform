@@ -284,8 +284,7 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
             self._publish_event,
         )
 
-        current_selections = set(tuple(x) for x in self.selected)
-        if current_selections != block_keys['selected']:
+        if any(block_keys[changed] for changed in ('invalid', 'overlimit', 'added')):
             # Save our selections to the user state, to ensure consistency:
             selected = list(block_keys['selected'])
             random.shuffle(selected)
