@@ -22,6 +22,7 @@ from six import text_type
 from web_fragments.fragment import Fragment
 from xblock.core import XBlock
 from xblock.fields import Scope
+import static_replace
 
 import dogstats_wrapper as dog_stats_api
 from cms.lib.xblock.authoring_mixin import VISIBILITY_VIEW
@@ -384,6 +385,9 @@ def xblock_view_handler(request, usage_key_string, view_name):
             }
 
             fragment = get_preview_fragment(request, xblock, context)
+            # After the view has been rendered, we can extract any static paths from it.
+            # This should work for all blocks which allow adding static paths in the content from the Files & Upload section
+            fragment.content = static_replace.replace_static_urls(fragment.content, data_directory=None, course_id=usage_key.course_key)
 
             # Note that the container view recursively adds headers into the preview fragment,
             # so only the "Pages" view requires that this extra wrapper be included.

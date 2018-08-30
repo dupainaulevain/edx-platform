@@ -161,6 +161,8 @@ def replace_static_urls(text, data_directory=None, course_id=None, static_asset_
     static_asset_path: Path for static assets, which overrides data_directory and course_namespace, if nonempty
     """
 
+    static_paths = []
+
     def replace_static_url(original, prefix, quote, rest):
         """
         Replace a single matched url.
@@ -198,6 +200,8 @@ def replace_static_urls(text, data_directory=None, course_id=None, static_asset_
                 if AssetLocator.CANONICAL_NAMESPACE in url:
                     url = url.replace('block@', 'block/', 1)
 
+                static_paths.append([rest, url])
+
         # Otherwise, look the file up in staticfiles_storage, and append the data directory if needed
         else:
             course_path = "/".join((static_asset_path or data_directory, rest))
@@ -215,4 +219,5 @@ def replace_static_urls(text, data_directory=None, course_id=None, static_asset_
 
         return "".join([quote, url, quote])
 
-    return process_static_urls(text, replace_static_url, data_dir=static_asset_path or data_directory)
+    processed_text = process_static_urls(text, replace_static_url, data_dir=static_asset_path or data_directory)
+    return unicode(static_paths)

@@ -751,6 +751,7 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
 
         # Now do all the substitutions which the LMS module_render normally does, but
         # we need to do here explicitly since we can get called for our HTML via AJAX
+        # Here is where CAPA does the replacement.
         html = self.runtime.replace_urls(html)
         if self.runtime.replace_course_urls:
             html = self.runtime.replace_course_urls(html)

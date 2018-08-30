@@ -268,6 +268,7 @@ def replace_course_urls(course_id, block, view, frag, context):  # pylint: disab
     return wrap_fragment(frag, static_replace.replace_course_urls(frag.content, course_id))
 
 
+# Here is the wrapper function which does the replacement for most blocks
 def replace_static_urls(data_dir, block, view, frag, context, course_id=None, static_asset_path=''):  # pylint: disable=unused-argument
     """
     Updates the supplied module with a new get_html function that wraps

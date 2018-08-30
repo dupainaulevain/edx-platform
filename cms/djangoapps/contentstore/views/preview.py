@@ -170,7 +170,10 @@ def _preview_module_system(request, descriptor, field_data):
 
         # This wrapper replaces urls in the output that start with /static
         # with the correct course-specific url for the static content
-        partial(replace_static_urls, None, course_id=course_id),
+
+        # This is used by most blocks to replace static paths in the html with actual URLs.
+        # We do not want to replace them yet because we want to extract them later.
+        # partial(replace_static_urls, None, course_id=course_id),
         _studio_wrap_xblock,
     ]
 
@@ -187,6 +190,11 @@ def _preview_module_system(request, descriptor, field_data):
         # stick the license wrapper in front
         wrappers.insert(0, wrap_with_license)
 
+    # This is used by CAPA to replace static paths in the html with actual URLs.
+    # We do not want to replace them yet because we want to extract them later.
+    def noop_replace_urls(html):
+        return html
+
     return PreviewModuleSystem(
         static_url=settings.STATIC_URL,
         # TODO (cpennington): Do we want to track how instructors are using the preview problems?
@@ -195,7 +203,8 @@ def _preview_module_system(request, descriptor, field_data):
         get_module=partial(_load_preview_module, request),
         render_template=render_from_lms,
         debug=True,
-        replace_urls=partial(static_replace.replace_static_urls, data_directory=None, course_id=course_id),
+        # replace_urls=partial(static_replace.replace_static_urls, data_directory=None, course_id=course_id),
+        replace_urls=noop_replace_urls,
         user=request.user,
         can_execute_unsafe_code=(lambda: can_execute_unsafe_code(course_id)),
         get_python_lib_zip=(lambda: get_python_lib_zip(contentstore, course_id)),
