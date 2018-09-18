@@ -59,7 +59,7 @@ class TestGlobalAnnouncements(TestCase):
         self.assertIn('AnnouncementsView', response.content)
 
     def test_pagination(self):
-        url = reverse("announcements_page", kwargs={"page": 1})
+        url = reverse("announcements:page", kwargs={"page": 1})
         response = self.client.get(url)
         data = json.loads(response.content)
         self.assertEquals(data['num_pages'], 1)
@@ -73,7 +73,7 @@ class TestGlobalAnnouncements(TestCase):
         """
         Ensures that active announcements are visible on the dashboard
         """
-        url = reverse("announcements_page", kwargs={"page": 1})
+        url = reverse("announcements:page", kwargs={"page": 1})
         response = self.client.get(url)
         self.assertIn("Active Announcement", response.content)
 
@@ -81,7 +81,7 @@ class TestGlobalAnnouncements(TestCase):
         """
         Ensures that inactive announcements aren't visible on the dashboard
         """
-        url = reverse("announcements_page", kwargs={"page": 1})
+        url = reverse("announcements:page", kwargs={"page": 1})
         response = self.client.get(url)
         self.assertNotIn("Inactive Announcement", response.content)
 
@@ -89,6 +89,6 @@ class TestGlobalAnnouncements(TestCase):
         """
         Ensures that formatting in announcements is rendered properly
         """
-        url = reverse("announcements_page", kwargs={"page": 1})
+        url = reverse("announcements:page", kwargs={"page": 1})
         response = self.client.get(url)
         self.assertIn("<strong>Formatted Announcement</strong>", response.content)

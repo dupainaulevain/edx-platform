@@ -11,6 +11,6 @@ urlpatterns = [
     url(
         r'^page/(?P<page>\d+)$',
         login_required(AnnouncementsJSONView.as_view()),
-        name='announcements_page',
+        name='page',
     ),
 ]

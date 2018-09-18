@@ -45,7 +45,7 @@ MAINTENANCE_VIEWS = {
         'name': _('Edit Announcements'),
         'slug': 'announcement_index',
         'description': _(
-            'This view shows the announcement editor to create or alter announcements that are showed on the right'
+            'This view shows the announcement editor to create or alter announcements that are shown on the right'
             'side of the dashboard.'
         ),
     },

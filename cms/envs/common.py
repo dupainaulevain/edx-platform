@@ -238,10 +238,6 @@ FEATURES = {
     # course and that can be read from themes
     'ENABLE_OTHER_COURSE_SETTINGS': False,
 
-    # Configure number of announcements to show per page
-    'ENABLE_ANNOUNCEMENTS': False,
-    'ANNOUNCEMENTS_PER_PAGE': 5,
-
     # Enable support for content libraries. Note that content libraries are
     # only supported in courses using split mongo.
     'ENABLE_CONTENT_LIBRARIES': True,
@@ -1024,9 +1020,6 @@ INSTALLED_APPS = [
 
     # edX Video Pipeline integration
     'openedx.core.djangoapps.video_pipeline',
-
-    # Announcements
-    'openedx.features.announcements',
 
     # For CMS
     'contentstore.apps.ContentstoreConfig',

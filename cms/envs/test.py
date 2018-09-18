@@ -325,9 +325,6 @@ SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
 INSTALLED_APPS.append('openedx.core.djangoapps.ccxcon.apps.CCXConnectorConfig')
 FEATURES['CUSTOM_COURSES_EDX'] = True
 
-######### announcements #########
-FEATURES['ENABLE_ANNOUNCEMENTS'] = True
-
 ########################## VIDEO IMAGE STORAGE ############################
 VIDEO_IMAGE_SETTINGS = dict(
     VIDEO_IMAGE_MAX_BYTES=2 * 1024 * 1024,    # 2 MB

@@ -31,19 +31,19 @@ from openedx.core.djangolib.markup import HTML, Text
             <a href="${ reverse('maintenance:announcement_create') }">
                 <button class="action action-primary">${_('Create New')}</button>
             </a>
-						% if is_paginated:
-									% if page_obj.has_previous():
+            % if is_paginated:
+                  % if page_obj.has_previous():
                   <a href="${ reverse('maintenance:announcement_index', kwargs={'page': page_obj.previous_page_number()}) }">
-										  <button class="action action-secondary">previous</button>
-								  </a>
-									% endif
+                      <button class="action action-secondary">previous</button>
+                  </a>
+                  % endif
 
-									% if page_obj.has_next():
+                  % if page_obj.has_next():
                   <a href="${ reverse('maintenance:announcement_index', kwargs={'page':  page_obj.next_page_number()}) }">
-										  <button class="action action-secondary">next</button>
-								  </a>
-									% endif
-						% endif
+                      <button class="action action-secondary">next</button>
+                  </a>
+                  % endif
+            % endif
         </div>
     </div>
 </div>

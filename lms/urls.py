@@ -166,11 +166,6 @@ if settings.FEATURES.get('ENABLE_SYSADMIN_DASHBOARD'):
         url(r'^sysadmin/', include('dashboard.sysadmin_urls')),
     ]
 
-if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
-    urlpatterns.append(
-        url(r'^announcements/', include('openedx.features.announcements.urls'))
-    )
-
 urlpatterns += [
     url(r'^support/', include('support.urls')),
 ]
