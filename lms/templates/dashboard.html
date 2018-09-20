@@ -252,10 +252,6 @@ from student.models import CourseEnrollment
           </div>
         %endif
 
-        % if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
-          <%include file='dashboard/_dashboard_announcements.html' args='announcements=announcements' />
-        % endif
-
         % if settings.FEATURES.get('ENABLE_DASHBOARD_SEARCH'):
           <div id="dashboard-search-bar" class="search-bar dashboard-search-bar" role="search" aria-label="Dashboard">
             <form class="search-form">
@@ -272,6 +268,10 @@ from student.models import CourseEnrollment
             </form>
           </div>
           <div id="dashboard-search-results" class="search-results dashboard-search-results"></div>
+        % endif
+
+        % if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
+          <%include file='dashboard/_dashboard_announcements.html' args='announcements=announcements' />
         % endif
 
         % if display_sidebar_on_dashboard:
