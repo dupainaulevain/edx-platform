@@ -275,6 +275,11 @@ class TestAnnouncementsViews(MaintenanceViewTestCase):
             password='pass'
         )
         self.client.login(username=self.admin.username, password='pass')
+        self.non_staff_user = UserFactory.create(
+            email='test@edx.org',
+            username='test',
+            password='pass'
+        )
 
     def test_index(self):
         """
@@ -316,3 +321,18 @@ class TestAnnouncementsViews(MaintenanceViewTestCase):
         self.client.post(url)
         result = Announcement.objects.filter(content="Test Edit Announcement").exists()
         self.assertFalse(result)
+
+    def _test_403(self, viewname, kwargs=None):
+        url = reverse("maintenance:%s" % viewname, kwargs=kwargs)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_authorization(self):
+        self.client.login(username=self.non_staff_user, password='pass')
+        announcement = Announcement.objects.create(content="Test Delete")
+        announcement.save()
+
+        self._test_403("announcement_index")
+        self._test_403("announcement_create")
+        self._test_403("announcement_edit", {"pk": announcement.pk})
+        self._test_403("announcement_delete", {"pk": announcement.pk})

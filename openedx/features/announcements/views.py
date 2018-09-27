@@ -15,7 +15,7 @@ class AnnouncementsJSONView(ListView):
     """
     model = Announcement
     object_list = Announcement.objects.filter(active=True)
-    paginate_by = settings.FEATURES.get('ANNOUNCEMENTS_PER_PAGE', 3)
+    paginate_by = settings.FEATURES.get('ANNOUNCEMENTS_PER_PAGE', 5)
 
     def get(self, request, *args, **kwargs):
         """

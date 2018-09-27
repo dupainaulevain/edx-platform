@@ -258,8 +258,7 @@ class AnnouncementIndexView(ListView, MaintenanceBaseView):
 
     @method_decorator(require_global_staff)
     def get(self, request, *args, **kwargs):
-        if "limit" in request.GET.keys():
-            self.paginate_by = max(request.GET.get("limit"), 50)
+        self.paginate_by = 50
         context = self.get_context_data()
         return render_to_response(self.template, context)
 
