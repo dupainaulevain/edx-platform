@@ -176,7 +176,21 @@ course_sections = blocks.get('children')
         </ol>
     % endif
 </main>
+<script>
+    $(document).ready(function(){
+        var url_hash = window.location.hash;
 
+        if(url_hash !== ""){
+            var block = document.getElementById(url_hash);
+            if(block.classList.contains('subsection-text')){
+                var parent_li = block.parentElement.parentElement.parentElement;
+                var parent_block = parent_li.children[0];
+                parent_block.click()
+            }
+            block.click()
+        }
+    });
+</script>
 <%static:require_module_async module_name="js/dateutil_factory" class_name="DateUtilFactory">
     DateUtilFactory.transform('.localized-datetime');
 </%static:require_module_async>
