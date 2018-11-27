@@ -96,16 +96,16 @@ export class CourseOutline {  // eslint-disable-line import/prefer-default-expor
       event.stopImmediatePropagation();
     });
 
-    var url_hash = window.location.hash;
+    const urlHash = window.location.hash;
 
-    if (url_hash !== "") {
-        var button = document.getElementById(url_hash.substr(1, url_hash.length));
-        if (button.classList.contains('subsection-text')) {
-            var parent_li = button.closest('.section');
-            var parent_button = parent_li.querySelector('.section-name');
-            parent_button.click()
-        }
-        button.click()
+    if (urlHash !== '') {
+      const button = document.getElementById(urlHash.substr(1, urlHash.length));
+      if (button.classList.contains('subsection-text')) {
+        const parentLi = button.closest('.section');
+        const parentButton = parentLi.querySelector('.section-name');
+        parentButton.click();
+      }
+      button.click();
     }
   }
 }
