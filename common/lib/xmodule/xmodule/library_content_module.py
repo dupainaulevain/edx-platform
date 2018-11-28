@@ -184,7 +184,7 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
                 # We now have the correct n random children to show for this user.
             else:
                 raise NotImplementedError("Unsupported mode.")
-            selected |= added_block_keys
+            selected_keys |= added_block_keys
 
         if any([invalid_block_keys, overlimit_block_keys, added_block_keys]):
             selected = selected_keys
