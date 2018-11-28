@@ -154,30 +154,30 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
         """
         rand = random.Random()
 
-        selected = set(tuple(k) for k in selected)  # set of (block_type, block_id) tuples assigned to this student
+        selected_keys = set(tuple(k) for k in selected)  # set of (block_type, block_id) tuples assigned to this student
 
         # Determine which of our children we will show:
         valid_block_keys = set([(c.block_type, c.block_id) for c in children])
 
         # Remove any selected blocks that are no longer valid:
-        invalid_block_keys = (selected - valid_block_keys)
+        invalid_block_keys = (selected_keys - valid_block_keys)
         if invalid_block_keys:
-            selected -= invalid_block_keys
+            selected_keys -= invalid_block_keys
 
         # If max_count has been decreased, we may have to drop some previously selected blocks:
         overlimit_block_keys = set()
-        if len(selected) > max_count:
-            num_to_remove = len(selected) - max_count
-            overlimit_block_keys = set(rand.sample(selected, num_to_remove))
-            selected -= overlimit_block_keys
+        if len(selected_keys) > max_count:
+            num_to_remove = len(selected_keys) - max_count
+            overlimit_block_keys = set(rand.sample(selected_keys, num_to_remove))
+            selected_keys -= overlimit_block_keys
 
         # Do we have enough blocks now?
-        num_to_add = max_count - len(selected)
+        num_to_add = max_count - len(selected_keys)
 
         added_block_keys = None
         if num_to_add > 0:
             # We need to select [more] blocks to display to this user:
-            pool = valid_block_keys - selected
+            pool = valid_block_keys - selected_keys
             if mode == "random":
                 num_to_add = min(len(pool), num_to_add)
                 added_block_keys = set(rand.sample(pool, num_to_add))

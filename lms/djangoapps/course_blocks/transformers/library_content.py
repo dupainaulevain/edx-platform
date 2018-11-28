@@ -217,4 +217,4 @@ class ContentLibraryRandomizeTransformer(BlockStructureTransformer):
             state_dict = get_student_module_as_dict(usage_info.user, usage_info.course_key, block_key)
             library_children = block_structure.get_children(block_key)
             ordering_data = {block[1]: position for position, block in enumerate(state_dict['selected'])}
-            library_children.sort(key=lambda block, ordering_data=ordering_data: ordering_data[block.block_id])
+            library_children.sort(key=lambda block, data=ordering_data: data[block.block_id])
