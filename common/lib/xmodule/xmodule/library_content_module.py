@@ -186,6 +186,9 @@ class LibraryContentModule(LibraryContentFields, XModule, StudioEditableModule):
                 raise NotImplementedError("Unsupported mode.")
             selected |= added_block_keys
 
+        if any([invalid_block_keys, overlimit_block_keys, added_block_keys]):
+            selected = selected_keys
+
         return {
             'selected': selected,
             'invalid': invalid_block_keys,
