@@ -98,10 +98,8 @@ class ContentLibraryTransformer(FilteringTransformerMixin, BlockStructureTransfo
 
                 # Save back any changes
                 if any(block_keys[changed] for changed in ('invalid', 'overlimit', 'added')):
-                    state_dict['changed'] = True
                     state_dict['selected'] = list(selected)
                     random.shuffle(state_dict['selected'])
-
                     StudentModule.save_state(  # pylint: disable=no-value-for-parameter
                         student=usage_info.user,
                         course_id=usage_info.course_key,
@@ -201,26 +199,22 @@ class ContentLibraryRandomizeTransformer(BlockStructureTransformer):
 
     @classmethod
     def collect(cls, block_structure):
-        block_structure.request_xblock_fields('mode')
-        block_structure.request_xblock_fields('max_count')
+        """
+        Collects any information that's necessary to execute this
+        transformer's transform method.
+        """
+        pass
 
     def transform(self, usage_info, block_structure):
+        """
+        Transforms the order of the children of the randomized content block
+        to match the order in the stored state.
+        """
         for block_key in block_structure:
             if block_key.block_type != 'library_content':
                 continue
 
             state_dict = get_student_module_as_dict(usage_info.user, usage_info.course_key, block_key)
-
-            if 'changed' in state_dict:
-                library_children = block_structure.get_children(block_key)
-                random.shuffle(library_children)
-                state_dict['selected'] = [[child.block_type, child.block_id] for child in library_children]
-                del state_dict['changed']
-                StudentModule.objects.update_or_create(
-                    student=usage_info.user,
-                    course_id=usage_info.course_key,
-                    module_state_key=block_key,
-                    defaults={
-                        'state': json.dumps(state_dict),
-                    }
-                )
+            library_children = block_structure.get_children(block_key)
+            ordering_data = {block[1]: position for position, block in enumerate(state_dict['selected'])}
+            library_children.sort(key=lambda block: ordering_data[block.block_id])
