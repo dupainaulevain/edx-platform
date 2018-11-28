@@ -103,9 +103,9 @@ export class CourseOutline {  // eslint-disable-line import/prefer-default-expor
       if (button.classList.contains('subsection-text')) {
         const parentLi = button.closest('.section');
         const parentButton = parentLi.querySelector('.section-name');
-        parentButton.click();
+        expandSection(parentButton);
       }
-      button.click();
+      expandSection(button);
     }
   }
 }
