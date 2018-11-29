@@ -184,9 +184,15 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
 
 
 class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
+    """
+    ContentLibraryOrderTransformer Test
+    """
     TRANSFORMER_CLASS_TO_TEST = ContentLibraryOrderTransformer
 
     def setUp(self):
+        """
+        Setup course structure and create user for content library order transformer test.
+        """
         super(ContentLibraryOrderTransformerTestCase, self).setUp()
         self.course_hierarchy = self.get_course_hierarchy()
         self.blocks = self.build_course(self.course_hierarchy)
@@ -274,10 +280,8 @@ class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
     @mock.patch('lms.djangoapps.course_blocks.transformers.library_content.get_student_module_as_dict')
     def test_content_library_randomize(self, mocked):
         """
-        Test when course has content library section.
-        First test user can't see any content library section,
-        and after that mock response from MySQL db.
-        Check user can see mocked sections in content library.
+        Test whether the order of the children blocks matches the order of the selected blocks when
+        course has content library section
         """
         mocked.return_value = {
             'selected': [

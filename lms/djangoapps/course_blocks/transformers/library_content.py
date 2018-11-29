@@ -181,8 +181,11 @@ class ContentLibraryTransformer(FilteringTransformerMixin, BlockStructureTransfo
 
 class ContentLibraryOrderTransformer(BlockStructureTransformer):
     """
-    A transformer that manipulates the block structure by randomizing the order of the
-    selected blocks within a library_content module.
+    A transformer that manipulates the block structure by modifying the order of the
+    selected blocks within a library_content module to match the order of the selections
+    made by the ContentLibraryTransformer or the corresponding XBlock. So this transformer
+    requires the selections for the randomized content block to be already
+    made either by the ContentLibraryTransformer or the XBlock.
 
     Staff users are *not* exempted from library content pathways/
     """
@@ -203,12 +206,13 @@ class ContentLibraryOrderTransformer(BlockStructureTransformer):
         Collects any information that's necessary to execute this
         transformer's transform method.
         """
+        # There is nothing to collect.
         pass
 
     def transform(self, usage_info, block_structure):
         """
         Transforms the order of the children of the randomized content block
-        to match the order in the stored state.
+        to match the order of the selections made and stored in the XBlock 'selected' field.
         """
         for block_key in block_structure:
             if block_key.block_type != 'library_content':
