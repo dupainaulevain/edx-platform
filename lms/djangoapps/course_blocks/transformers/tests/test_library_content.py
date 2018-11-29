@@ -8,7 +8,7 @@ from openedx.core.djangoapps.content.block_structure.transformers import BlockSt
 from student.tests.factories import CourseEnrollmentFactory
 
 from ...api import get_course_blocks
-from ..library_content import ContentLibraryTransformer, ContentLibraryRandomizeTransformer
+from ..library_content import ContentLibraryTransformer, ContentLibraryOrderTransformer
 from .helpers import CourseStructureTestCase
 
 
@@ -183,11 +183,11 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
         self.assertEqual(len(list(transformed_blocks.get_block_keys())), len(self.blocks))
 
 
-class ContentLibraryRandomizeTransformerTestCase(CourseStructureTestCase):
-    TRANSFORMER_CLASS_TO_TEST = ContentLibraryRandomizeTransformer
+class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
+    TRANSFORMER_CLASS_TO_TEST = ContentLibraryOrderTransformer
 
     def setUp(self):
-        super(ContentLibraryRandomizeTransformerTestCase, self).setUp()
+        super(ContentLibraryOrderTransformerTestCase, self).setUp()
         self.course_hierarchy = self.get_course_hierarchy()
         self.blocks = self.build_course(self.course_hierarchy)
         self.course = self.blocks['course']

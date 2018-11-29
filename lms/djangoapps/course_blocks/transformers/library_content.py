@@ -179,7 +179,7 @@ class ContentLibraryTransformer(FilteringTransformerMixin, BlockStructureTransfo
         )
 
 
-class ContentLibraryRandomizeTransformer(BlockStructureTransformer):
+class ContentLibraryOrderTransformer(BlockStructureTransformer):
     """
     A transformer that manipulates the block structure by randomizing the order of the
     selected blocks within a library_content module.
