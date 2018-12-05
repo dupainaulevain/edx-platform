@@ -296,21 +296,15 @@ class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
                 self.course.location,
                 self.transformers,
             )
+            children = []
+            for block_key in trans_block_structure.topological_traversal():
+                if block_key.block_type == 'library_content':
+                    children = trans_block_structure.get_children(block_key)
+                    break
+
+            expected_children = ['vertical_vertical3', 'vertical_vertical2', 'vertical_vertical4']
             self.assertEqual(
-                set(trans_block_structure.get_block_keys()),
-                self.get_block_key_set(
-                    self.blocks,
-                    'course',
-                    'chapter1',
-                    'lesson1',
-                    'vertical1',
-                    'library_content1',
-                    'vertical3',
-                    'html2',
-                    'vertical2',
-                    'html1',
-                    'vertical4',
-                    'html3'
-                ),
+                expected_children,
+                [child.block_id for child in children],
                 "Expected 'selected' equality failed in iteration {}.".format(i)
             )
