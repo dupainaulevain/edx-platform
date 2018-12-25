@@ -671,26 +671,33 @@ class ProblemResponses(object):
                 if hasattr(block, 'generate_report_data'):
                     try:
                         user_state_iterator = user_state_client.iter_all_for_block(block_key)
-                        generated_report_data = {
-                            username: state
-                            for username, state in
-                            block.generate_report_data(user_state_iterator, max_count)
-                        }
+                        generated_report_data = dict()
+                        for username, state in block.generate_report_data(user_state_iterator, max_count):
+                            generated_report_data.setdefault(username, []).append(state)
                     except NotImplementedError:
                         pass
 
-                responses = list_problem_responses(course_key, block_key, max_count)
+                responses = []
 
-                student_data += responses
-                for response in responses:
+
+                for response in list_problem_responses(course_key, block_key, max_count):
                     response['title'] = title
                     # A human-readable location for the current block
                     response['location'] = ' > '.join(path)
                     # A machine-friendly location for the current block
                     response['block_key'] = str(block_key)
-                    user_data = generated_report_data.get(response['username'], {})
-                    response.update(user_data)
-                    student_data_keys = student_data_keys.union(user_data.keys())
+                    user_states = generated_report_data.get(response['username'], [])
+                    if user_states:
+                        for user_state in user_states:
+                            user_response = response.copy()
+                            user_response.update(user_state)
+                            student_data_keys = student_data_keys.union(user_state.keys())
+                            responses.append(user_response)
+                    else:
+                        responses.append(response)
+
+                student_data += responses
+
                 if max_count is not None:
                     max_count -= len(responses)
                     if max_count <= 0:
