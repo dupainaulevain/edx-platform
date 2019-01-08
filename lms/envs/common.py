@@ -1418,6 +1418,10 @@ discussion_vendor_js = [
     'js/split.js'
 ]
 
+video_js = (
+    rooted_glob(COMMON_ROOT / 'static', 'js/video/*.js')
+)
+
 notes_js = ['js/notes.js']
 instructor_dash_js = sorted(rooted_glob(PROJECT_ROOT / 'static', 'js/instructor_dashboard/**/*.js'))
 
@@ -1574,6 +1578,12 @@ PIPELINE_CSS = {
         ],
         'output_filename': 'css/discussion/inline-discussion-rtl.css',
     },
+    'style-video': {
+        'source_filenames': [
+            'common/css/video.css',
+        ],
+        'output_filename': 'common/css/video.css',
+    },
     FOOTER_CSS['openedx']['ltr']: {
         'source_filenames': [
             'css/lms-footer.css',
@@ -1698,6 +1708,10 @@ PIPELINE_JS = {
     'discussion_vendor': {
         'source_filenames': discussion_vendor_js,
         'output_filename': 'js/discussion_vendor.js',
+    },
+    'video': {
+        'source_filenames': video_js,
+        'output_filename': 'js/video.js',
     },
     'notes': {
         'source_filenames': notes_js,
