@@ -27,8 +27,11 @@ class AnnouncementList extends React.Component {
     this.state = {
       page: 1,
       announcements: [],
+      num_pages: 0,
       has_prev: false,
       has_next: false,
+      start_index: 0,
+      end_index: 0,
     };
   }
 
@@ -39,6 +42,10 @@ class AnnouncementList extends React.Component {
           announcements: data.announcements,
           has_next: data.next,
           has_prev: data.prev,
+          num_pages: data.num_pages,
+          count: data.count,
+          start_index: data.start_index,
+          end_index: data.end_index,
           page: page
         });
       })
@@ -63,21 +70,27 @@ class AnnouncementList extends React.Component {
     if (this.state.has_prev)
     {
       var prev_button = (
-        <Button
-          className={["announcement-button", "prev"]}
-          onClick={() => this.renderPrevPage()}
-          label="← previous"
-        />
+        <div>
+          <Button
+            className={["announcement-button", "prev"]}
+            onClick={() => this.renderPrevPage()}
+            label="← previous"
+          />
+          <span class="sr-only">{this.state.start_index + " - " + this.state.end_index + ") of " + this.state.count}</span>
+        </div>
       );
     }
     if (this.state.has_next)
     {
       var next_button = (
-        <Button
-          className={["announcement-button", "next"]}
-          onClick={() => this.renderNextPage()}
-          label="next →"
-        />
+        <div>
+          <Button
+            className={["announcement-button", "next"]}
+            onClick={() => this.renderNextPage()}
+            label="next →"
+          />
+          <span class="sr-only">{this.state.start_index + " - " + this.state.end_index + ") of " + this.state.count}</span>
+        </div>
       );
     }
     return (

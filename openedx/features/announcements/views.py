@@ -28,6 +28,9 @@ class AnnouncementsJSONView(ListView):
             "announcements": announcements,
             "next": context['page_obj'].has_next(),
             "prev": context['page_obj'].has_previous(),
+            "start_index": context['page_obj'].start_index(),
+            "end_index": context['page_obj'].end_index(),
+            "count": context['paginator'].count,
             "num_pages": context['paginator'].num_pages,
         }
         return JsonResponse(result)
