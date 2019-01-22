@@ -76,7 +76,7 @@ class AnnouncementList extends React.Component {
             onClick={() => this.renderPrevPage()}
             label="← previous"
           />
-          <span class="sr-only">{this.state.start_index + " - " + this.state.end_index + ") of " + this.state.count}</span>
+          <span className="sr-only">{this.state.start_index + " - " + this.state.end_index + ") of " + this.state.count}</span>
         </div>
       );
     }
@@ -89,7 +89,7 @@ class AnnouncementList extends React.Component {
             onClick={() => this.renderNextPage()}
             label="next →"
           />
-          <span class="sr-only">{this.state.start_index + " - " + this.state.end_index + ") of " + this.state.count}</span>
+          <span className="sr-only">{this.state.start_index + " - " + this.state.end_index + ") of " + this.state.count}</span>
         </div>
       );
     }
@@ -103,12 +103,35 @@ class AnnouncementList extends React.Component {
   }
 }
 
+class AnnouncementSkipLink extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      count: 0
+    };
+    $.get('/announcements/page/1')
+      .then(data => {
+        this.setState({
+          count: data.count
+        });
+      })
+  }
+
+  render() {
+    return (<div>{"Skip to list of " + this.state.count + " announcements"}</div>)
+  }
+}
+
 
 export class AnnouncementsView {
   constructor() {
     ReactDOM.render(
       <AnnouncementList />,
       document.getElementById('announcements'),
+    );
+    ReactDOM.render(
+      <AnnouncementSkipLink />,
+      document.getElementById('announcements-skip'),
     );
   }
 }
