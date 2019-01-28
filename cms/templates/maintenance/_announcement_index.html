@@ -11,7 +11,7 @@ from openedx.core.djangolib.markup import HTML, Text
             % for announcement in announcement_list:
                 <div class="announcement-item">
                     <div class="announcement-content">
-                        ${announcement.content | n}
+                        ${announcement.content | n} ## xss-lint: disable=mako-invalid-html-filter
                     </div>
 
                     <div class="actions-list">
