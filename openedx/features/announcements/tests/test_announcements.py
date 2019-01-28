@@ -32,12 +32,14 @@ class TestGlobalAnnouncements(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        super(TestGlobalAnnouncements, cls).setUpTestData()
         Announcement.objects.bulk_create([
             Announcement(content=content, active=active)
             for content, active in TEST_ANNOUNCEMENTS
         ])
 
     def setUp(self):
+        super(TestGlobalAnnouncements, self).setUp()
         self.client = Client()
         self.admin = AdminFactory.create(
             email='staff@edx.org',
