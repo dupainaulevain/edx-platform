@@ -19,7 +19,8 @@ from openedx.core.djangolib.markup import HTML, Text
             <div class="wrapper-form announcement-container">
                 <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}"/>
                 <div class="announcement-item">
-                  ${form.as_p() | n} ## xss-lint: disable=mako-invalid-html-filter
+                  ## xss-lint: disable=mako-invalid-html-filter
+                  ${form.as_p() | n}
                 </div>
                 <div class="actions">
                     <button type="submit" class="action action-primary">${_('Save')}</button>
