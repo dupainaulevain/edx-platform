@@ -302,6 +302,7 @@ class CourseEnrollmentAdminTest(SharedModuleStoreTestCase):
                     data=data,
                 )
 
+
 class CourseEnrollmentAdminFormTest(SharedModuleStoreTestCase):
     """
     Unit test for CourseEnrollment admin ModelForm.
