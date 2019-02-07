@@ -25,6 +25,7 @@ from web_fragments.fragment import Fragment
 
 from edxmako.shortcuts import render_to_response, render_to_string
 
+from lms.djangoapps.courseware.courses import allow_public_access
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
 from lms.djangoapps.experiments.utils import get_experiment_user_metadata_context
 from lms.djangoapps.gating.api import get_entrance_exam_score_ratio, get_entrance_exam_usage_key
@@ -35,7 +36,6 @@ from openedx.core.djangoapps.user_api.preferences.api import get_user_preference
 from openedx.core.djangoapps.util.user_messages import PageLevelMessages
 from openedx.core.djangoapps.waffle_utils import WaffleSwitchNamespace
 from openedx.core.djangolib.markup import HTML, Text
-from openedx.features.course_duration_limits.access import register_course_expired_message
 from openedx.features.course_experience import (
     COURSE_OUTLINE_PAGE_FLAG, default_course_url_name, COURSE_ENABLE_UNENROLLED_ACCESS_FLAG
 )
@@ -49,7 +49,6 @@ from xmodule.course_module import COURSE_VISIBILITY_PUBLIC
 from xmodule.x_module import PUBLIC_VIEW, STUDENT_VIEW
 from .views import CourseTabView
 from ..access import has_access
-from ..access_utils import check_course_open_for_learner
 from ..courses import check_course_access, get_course_with_access, get_current_child, get_studio_url
 from ..entrance_exams import (
     course_has_entrance_exam,
@@ -57,7 +56,10 @@ from ..entrance_exams import (
     user_can_skip_entrance_exam,
     user_has_passed_entrance_exam
 )
-from ..masquerade import setup_masquerade
+from ..masquerade import (
+    setup_masquerade,
+    check_content_start_date_for_masquerade_user
+)
 from ..model_data import FieldDataCache
 from ..module_render import get_module_for_descriptor, toc_for_course
 
@@ -147,11 +149,10 @@ class CoursewareIndex(View):
 
                 self.is_staff = has_access(request.user, 'staff', self.course)
                 self._setup_masquerade_for_effective_user()
-                register_course_expired_message(request, self.course)
 
                 return self.render(request)
         except Exception as exception:  # pylint: disable=broad-except
-            return CourseTabView.handle_exceptions(request, self.course, exception)
+            return CourseTabView.handle_exceptions(request, self.course_key, self.course, exception)
 
     def _setup_masquerade_for_effective_user(self):
         """
@@ -185,6 +186,9 @@ class CoursewareIndex(View):
                 self._save_positions()
                 self._prefetch_and_bind_section()
 
+            check_content_start_date_for_masquerade_user(self.course_key, self.effective_user, request,
+                                                         self.course.start, self.chapter.start, self.section.start)
+
         if not request.user.is_authenticated:
             qs = urllib.urlencode({
                 'course_id': self.course_key,
@@ -192,20 +196,23 @@ class CoursewareIndex(View):
                 'email_opt_in': False,
             })
 
-            PageLevelMessages.register_warning_message(
-                request,
-                Text(_("You are not signed in. To see additional course content, {sign_in_link} or "
-                       "{register_link}, and enroll in this course.")).format(
-                    sign_in_link=HTML('<a href="{url}">{sign_in_label}</a>').format(
-                        sign_in_label=_('sign in'),
-                        url='{}?{}'.format(reverse('signin_user'), qs),
-                    ),
-                    register_link=HTML('<a href="/{url}">{register_label}</a>').format(
-                        register_label=_('register'),
-                        url='{}?{}'.format(reverse('register_user'), qs),
-                    ),
+            allow_anonymous = allow_public_access(self.course, [COURSE_VISIBILITY_PUBLIC])
+
+            if not allow_anonymous:
+                PageLevelMessages.register_warning_message(
+                    request,
+                    Text(_("You are not signed in. To see additional course content, {sign_in_link} or "
+                           "{register_link}, and enroll in this course.")).format(
+                        sign_in_link=HTML('<a href="{url}">{sign_in_label}</a>').format(
+                            sign_in_label=_('sign in'),
+                            url='{}?{}'.format(reverse('signin_user'), qs),
+                        ),
+                        register_link=HTML('<a href="/{url}">{register_label}</a>').format(
+                            register_label=_('register'),
+                            url='{}?{}'.format(reverse('register_user'), qs),
+                        ),
+                    )
                 )
-            )
 
         return render_to_response('courseware/courseware.html', self._create_courseware_context(request))
 
@@ -312,7 +319,7 @@ class CoursewareIndex(View):
             if not child:
                 # User may be trying to access a child that isn't live yet
                 if not self._is_masquerading_as_student():
-                    raise Http404('No {block_type} found with name {url_name}'.format(
+                    raise Http404(u'No {block_type} found with name {url_name}'.format(
                         block_type=block_type,
                         url_name=url_name,
                     ))
@@ -437,13 +444,6 @@ class CoursewareIndex(View):
 
         # entrance exam data
         self._add_entrance_exam_to_context(courseware_context)
-
-        # staff masquerading data
-        if not check_course_open_for_learner(self.effective_user, self.course):
-            # Disable student view button if user is staff and
-            # course is not yet visible to students.
-            courseware_context['disable_student_access'] = True
-            courseware_context['supports_preview_menu'] = False
 
         if self.section:
             # chromeless data
