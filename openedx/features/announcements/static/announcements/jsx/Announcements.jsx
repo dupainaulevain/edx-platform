@@ -2,6 +2,27 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import { Button } from '@edx/paragon';
+import $ from 'jquery';
+
+
+class AnnouncementSkipLink extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      count: 0
+    };
+    $.get('/announcements/page/1')
+      .then(data => {
+        this.setState({
+          count: data.count
+        });
+      })
+  }
+
+  render() {
+    return (<div>{"Skip to list of " + this.state.count + " announcements"}</div>)
+  }
+}
 
 
 class Announcement extends React.Component {
@@ -103,27 +124,8 @@ class AnnouncementList extends React.Component {
   }
 }
 
-class AnnouncementSkipLink extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      count: 0
-    };
-    $.get('/announcements/page/1')
-      .then(data => {
-        this.setState({
-          count: data.count
-        });
-      })
-  }
 
-  render() {
-    return (<div>{"Skip to list of " + this.state.count + " announcements"}</div>)
-  }
-}
-
-
-export class AnnouncementsView {
+export default class AnnouncementsView {
   constructor() {
     ReactDOM.render(
       <AnnouncementList />,
@@ -135,3 +137,5 @@ export class AnnouncementsView {
     );
   }
 }
+
+export { AnnouncementsView, AnnouncementList, AnnouncementSkipLink }
