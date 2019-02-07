@@ -8,7 +8,7 @@ exports[`Announcements component render skip link 1`] = `
 
 exports[`Announcements component render test announcements 1`] = `
 <div
-  className="announcements"
+  className="announcements-list"
 >
   <div
     className="announcement"

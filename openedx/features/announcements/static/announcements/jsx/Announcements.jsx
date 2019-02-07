@@ -115,7 +115,7 @@ class AnnouncementList extends React.Component {
       );
     }
     return (
-      <div className="announcements">
+      <div className="announcements-list">
         {children}
         {prev_button}
         {next_button}
