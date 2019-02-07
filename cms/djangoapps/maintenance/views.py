@@ -258,7 +258,6 @@ class AnnouncementIndexView(ListView, MaintenanceBaseView):
 
     @method_decorator(require_global_staff)
     def get(self, request, *args, **kwargs):
-        self.paginate_by = 50
         context = self.get_context_data()
         return render_to_response(self.template, context)
 
