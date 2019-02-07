@@ -272,7 +272,7 @@ from student.models import CourseEnrollment
 
         % if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
           <%block name="skip_links">
-            <a id="announcements-skip" class="nav-skip sr-only sr-only-focusable" href="#announcements">${_("Skip to list of announcements")}</a>
+            <a class="nav-skip sr-only sr-only-focusable" href="#announcements" id="announcements-skip">${_("Skip to list of announcements")}</a>
           </%block>
           <%include file='dashboard/_dashboard_announcements.html' args='announcements=announcements' />
         % endif
