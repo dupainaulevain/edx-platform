@@ -244,9 +244,9 @@ class AnnouncementIndexView(ListView, MaintenanceBaseView):
     View for viewing the announcements shown on the dashboard, used by the global staff.
     """
     model = Announcement
-    object_list = Announcement.objects.all()
+    object_list = Announcement.objects.order_by('-active')
     context_object_name = 'announcement_list'
-    paginate_by = 9
+    paginate_by = 8
 
     def __init__(self):
         super(AnnouncementIndexView, self).__init__(MAINTENANCE_VIEWS['announcement_index'])
