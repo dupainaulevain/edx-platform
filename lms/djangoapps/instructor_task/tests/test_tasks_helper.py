@@ -543,7 +543,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         self.assertEquals(len(student_data), 1)
         self.assertDictContainsSubset({
             'username': 'student',
-            'location': 'Problem1',
+            'location': 'test_course > Section > Subsection > Problem1',
             'block_key': 'i4x://edx/1.23x/problem/Problem1',
             'title': 'Problem1',
         }, student_data[0])

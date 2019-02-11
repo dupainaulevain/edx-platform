@@ -599,6 +599,23 @@ class ProblemGradeReport(object):
 
 class ProblemResponses(object):
 
+    @staticmethod
+    def _build_block_base_path(block):
+        """
+        Return the display names of the blocks that lie above the supplied block in hierarchy.
+
+        Arguments:
+            block: a single block
+
+        Returns:
+            List[str]: a list of display names of blocks starting from the root block (Course)
+        """
+        path = []
+        while block.parent:
+            block = block.get_parent()
+            path.append(block.display_name)
+        return path[::-1]
+
     @classmethod
     def _build_problem_list(cls, course_blocks, root, path=None):
         """
@@ -657,6 +674,7 @@ class ProblemResponses(object):
         student_data_keys = set()
 
         with store.bulk_operations(course_key):
+            base_path = cls._build_block_base_path(store.get_item(usage_key))
             for title, path, block_key in cls._build_problem_list(course_blocks, usage_key):
                 # Chapter and sequential blocks are filtered out since they include state
                 # which isn't useful for this report.
@@ -683,7 +701,7 @@ class ProblemResponses(object):
                 for response in list_problem_responses(course_key, block_key, max_count):
                     response['title'] = title
                     # A human-readable location for the current block
-                    response['location'] = ' > '.join(path)
+                    response['location'] = ' > '.join(base_path + path)
                     # A machine-friendly location for the current block
                     response['block_key'] = str(block_key)
                     user_states = generated_report_data.get(response['username'], [])
