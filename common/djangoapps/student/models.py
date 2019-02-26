@@ -936,7 +936,7 @@ class LoginFailures(models.Model):
         if self.lockout_until is not None:
             date_str = self.lockout_until.isoformat()
 
-        return 'LoginFailures({username}, {count}, {date}'.format(
+        return 'LoginFailures({username}, {count}, {date})'.format(
             username=self.user.username,
             count=self.failure_count,
             date=date_str

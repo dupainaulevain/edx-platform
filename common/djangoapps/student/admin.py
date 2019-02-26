@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserChangeForm as BaseUserChangeForm
 from django.db import models
+from django.http import HttpResponseRedirect
 from django.http.request import QueryDict
 from django.utils.translation import ugettext_lazy as _, ngettext
 from opaque_keys import InvalidKeyError
@@ -356,7 +357,7 @@ class LoginFailuresAdmin(admin.ModelAdmin):
 
         Login Failure records should only be added if there's a login failure and not manually.
         """
-        return False.
+        return False
 
     def unlock_student_accounts(self, request, queryset):
         """Unlock student accounts with login failures."""

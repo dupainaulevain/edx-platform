@@ -8,11 +8,11 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.forms import ValidationError
 from django.urls import reverse
-from django.test import TestCase, overide_settings
+from django.test import TestCase, override_settings
 from mock import Mock
 
 from student.admin import COURSE_ENROLLMENT_ADMIN_SWITCH, UserAdmin
-from student.models import LoginFailures
+# from student.models import LoginFailures
 from student.tests.factories import CourseEnrollmentFactory, UserFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
@@ -322,13 +322,14 @@ class LoginFailuresAdminTest(TestCase):
 
     def tearDown(self):
         """Tear Down."""
+        super(LoginFailuresAdminTest, self).tearDown(cls)
         LoginFailures.objects.all().delete()
 
     @ddt.data(
         reverse('admin:student_loginfailures_changelist'),
         reverse('admin:student_loginfailures_add'),
         reverse('admin:student_loginfailures_change', args=(1,)),
-        reverse('admin:student_loginfailures_delete', args(1,)),
+        reverse('admin:student_loginfailures_delete', args=(1,)),
     )
     def test_feature_disabled(self, url):
         """Test if feature is disabled there's no access to the admin module."""
