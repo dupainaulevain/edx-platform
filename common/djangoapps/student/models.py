@@ -930,6 +930,34 @@ class LoginFailures(models.Model):
         except ObjectDoesNotExist:
             return
 
+    def __repr__(self):
+        """Repr -> LoginFailures(username, count, date)"""
+        date_str = '-'
+        if self.lockout_until is not None:
+            date_str = self.lockout_until.isoformat()
+
+        return 'LoginFailures({username}, {count}, {date}'.format(
+            username=self.user.username,
+            count=self.failure_count,
+            date=date_str
+        )
+
+    def __str__(self):
+        """Str -> Username: count - date."""
+        date_str = '-'
+        if self.lockout_until is not None:
+            date_str = self.lockout_until.isoformat()
+
+        return '{username}: {count} - {date}'.format(
+            username=self.user.username,
+            count=self.failure_count,
+            date=date_str
+        )
+
+    class Meta:
+        verbose_name = 'Login Failure'
+        verbose_name_plural = 'Login Failures'
+
 
 class CourseEnrollmentException(Exception):
     pass

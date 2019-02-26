@@ -1,15 +1,18 @@
 """
 Tests student admin.py
 """
+import datetime
 import ddt
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.forms import ValidationError
 from django.urls import reverse
-from django.test import TestCase
+from django.test import TestCase, overide_settings
 from mock import Mock
 
 from student.admin import COURSE_ENROLLMENT_ADMIN_SWITCH, UserAdmin
+from student.models import LoginFailures
 from student.tests.factories import CourseEnrollmentFactory, UserFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
@@ -298,3 +301,74 @@ class CourseEnrollmentAdminTest(SharedModuleStoreTestCase):
                     reverse('admin:student_courseenrollment_change', args=(self.course_enrollment.id, )),
                     data=data,
                 )
+
+
+@ddt.ddt
+class LoginFailuresAdminTest(TestCase):
+    """Test Login Failures Admin."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup Class."""
+        super(LoginFailuresAdminTest, self).setUpClass(cls)
+        self.user = UserFactory.create(is_staff=True, is_superuser=True)
+        self.client.login(username=self.user.username, password='test')
+
+    def setUp(self):
+        """Setup."""
+        user = UserFactory.create()
+        LoginFailures.objects.create(user=self.user, failure_count=10, lockout_until=datetime.datetime.now())
+        LoginFailures.objects.create(user=user, failure_count=2)
+
+    def tearDown(self):
+        """Tear Down."""
+        LoginFailures.objects.all().delete()
+
+    @ddt.data(
+        reverse('admin:student_loginfailures_changelist'),
+        reverse('admin:student_loginfailures_add'),
+        reverse('admin:student_loginfailures_change', args=(1,)),
+        reverse('admin:student_loginfailures_delete', args(1,)),
+    )
+    def test_feature_disabled(self, url):
+        """Test if feature is disabled there's no access to the admin module."""
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_unlock_student_accounts(self):
+        """Test batch unlock student accounts."""
+        url = reverse('admin:student_loginfailures_change')
+        with override_settings(
+            FEATURES=dict(
+                settings.FEATURES,
+                **{'ENABLE_MAX_FAILED_LOGIN_ATTEMPTS': True}
+            )
+        ):
+            response = self.client.post(
+                url,
+                {'action': 'unlock_student_accounts',
+                 '_selected_action': [unicode(o.pk) for o in LoginFailures.objects.all()]}
+            )
+        count = LoginFailures.objects.count()
+        self.assertEqual(count, 0)
+
+    def test_unlock_account(self):
+        """Test unlock single student account."""
+        url = reverse('admin:student_loginfailures_change')
+        start_count = LoginFailures.objects.count()
+        with override_settings(
+            FEATURES=dict(
+                settings.FEATURES,
+                **{'ENABLE_MAX_FAILED_LOGIN_ATTEMPTS': True}
+            )
+        ):
+            response = self.client.post(
+                url,
+                {'action': 'unlock_student_accounts',
+                 '_selected_action': [unicode(o.pk) for o in LoginFailures.objects.first()],
+                 '_unlock': {}}
+            )
+        count = LoginFailures.objects.count()
+        self.assertEqual(count, start_count-1)

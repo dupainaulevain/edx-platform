@@ -1,14 +1,17 @@
 """ Django admin pages for student app """
 from config_models.admin import ConfigurationModelAdmin
 from django import forms
+from django.db import router, transaction
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
+from django.contrib.admin.utils import unquote
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserChangeForm as BaseUserChangeForm
 from django.db import models
 from django.http.request import QueryDict
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, ngettext
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
@@ -27,7 +30,8 @@ from student.models import (
     RegistrationCookieConfiguration,
     UserAttribute,
     UserProfile,
-    UserTestGroup
+    UserTestGroup,
+    LoginFailures,
 )
 from student.roles import REGISTERED_ACCESS_ROLES
 from xmodule.modulestore.django import modulestore
@@ -314,6 +318,87 @@ class CourseEnrollmentAllowedAdmin(admin.ModelAdmin):
 
     class Meta(object):
         model = CourseEnrollmentAllowed
+
+
+@admin.register(LoginFailures)
+class LoginFailuresAdmin(admin.ModelAdmin):
+    """Admin interface for the LoginFailures model. """
+    list_display = ('user', 'failure_count', 'lockout_until')
+    raw_id_fields = ('user',)
+    search_fields = ('user__username', 'user__email')
+    actions = ['unlock_student_accounts']
+    change_form_template = 'admin/student/loginfailures/change_form_template.html'
+
+    def has_module_permission(self, request):
+        """Returns false if feature is not enabled and calls super if feature is enabled.
+        """
+        if self.model.is_feature_enabled():
+            return super(LoginFailuresAdmin, self).has_module_permission(request)
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Will always return false.
+
+        To delete a login failure the ``unlock_student_accounts`` action or the *Unlock* button
+        should be used.
+        """
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """Will always return false.
+
+        Admin users should not update Login Failures records.
+        """
+        return False
+
+    def has_add_permission(self, request):
+        """Will always return false.
+
+        Login Failure records should only be added if there's a login failure and not manually.
+        """
+        return False.
+
+    def unlock_student_accounts(self, request, queryset):
+        """Unlock student accounts with login failures."""
+        count = 0
+        with transaction.atomic(using=router.db_for_write(self.model)):
+            for obj in queryset:
+                self.unlock_student(request, obj=obj)
+                count += 1
+        self.message_user(
+            request,
+            ngettext(
+                '%(count)d student account was unlocked.', 
+                '%(count)d student accounts were unlocked.', 
+                count
+            ) % {
+                'count': count
+            }
+        )
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """Change View."""
+        if '_unlock' in request.POST:
+            with transaction.atomic(using=router.db_for_write(self.model)):
+                self.unlock_student(request, object_id=object_id)
+                url = reverse('admin:student_loginfailures_changelist', current_app=self.admin_site.name)
+                return HttpResponseRedirect(url)
+        return super(LoginFailuresAdmin, self).change_view(request, object_id, form_url, extra_context)
+
+    def get_actions(self, request):
+        """Get actions for model admin."""
+        actions = super(LoginFailuresAdmin, self).get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+
+    def unlock_student(self, request, object_id=None, obj=None):
+        """Unlock student account."""
+        record = obj
+        if object_id:
+            record = self.get_object(request, unquote(object_id))
+
+        self.model.clear_lockout_counter(record.user)
 
 
 admin.site.register(UserTestGroup)
