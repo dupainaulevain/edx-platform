@@ -306,5 +306,5 @@ class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
             self.assertEqual(
                 expected_children,
                 [child.block_id for child in children],
-                "Expected 'selected' equality failed in iteration {}.".format(i)
+                u"Expected 'selected' equality failed in iteration {}.".format(i)
             )
