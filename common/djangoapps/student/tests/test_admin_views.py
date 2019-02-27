@@ -12,7 +12,7 @@ from django.test import TestCase, override_settings
 from mock import Mock
 
 from student.admin import COURSE_ENROLLMENT_ADMIN_SWITCH, UserAdmin
-# from student.models import LoginFailures
+from student.models import LoginFailures
 from student.tests.factories import CourseEnrollmentFactory, UserFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
@@ -307,22 +307,18 @@ class CourseEnrollmentAdminTest(SharedModuleStoreTestCase):
 class LoginFailuresAdminTest(TestCase):
     """Test Login Failures Admin."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Setup Class."""
-        super(LoginFailuresAdminTest, self).setUpClass(cls)
-        self.user = UserFactory.create(is_staff=True, is_superuser=True)
-        self.client.login(username=self.user.username, password='test')
-
     def setUp(self):
         """Setup."""
+        super(LoginFailuresAdminTest, self).setUp()
+        self.user = UserFactory.create(is_staff=True, is_superuser=True)
+        self.client.login(username=self.user.username, password='test')
         user = UserFactory.create()
         LoginFailures.objects.create(user=self.user, failure_count=10, lockout_until=datetime.datetime.now())
         LoginFailures.objects.create(user=user, failure_count=2)
 
     def tearDown(self):
         """Tear Down."""
-        super(LoginFailuresAdminTest, self).tearDown(cls)
+        super(LoginFailuresAdminTest, self).tearDown()
         LoginFailures.objects.all().delete()
 
     @ddt.data(
@@ -338,38 +334,29 @@ class LoginFailuresAdminTest(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
 
+    @override_settings(FEATURES={'ENABLE_MAX_FAILED_LOGIN_ATTEMPTS': True})
     def test_unlock_student_accounts(self):
         """Test batch unlock student accounts."""
-        url = reverse('admin:student_loginfailures_change')
-        with override_settings(
-            FEATURES=dict(
-                settings.FEATURES,
-                **{'ENABLE_MAX_FAILED_LOGIN_ATTEMPTS': True}
-            )
-        ):
-            response = self.client.post(
-                url,
-                {'action': 'unlock_student_accounts',
-                 '_selected_action': [unicode(o.pk) for o in LoginFailures.objects.all()]}
-            )
+        url = reverse('admin:student_loginfailures_changelist')
+        self.client.post(
+            url,
+            data={
+                'action': 'unlock_student_accounts',
+                '_selected_action': [unicode(o.pk) for o in LoginFailures.objects.all()]
+            },
+            follow=True
+        )
         count = LoginFailures.objects.count()
         self.assertEqual(count, 0)
 
+    @override_settings(FEATURES={'ENABLE_MAX_FAILED_LOGIN_ATTEMPTS': True})
     def test_unlock_account(self):
         """Test unlock single student account."""
-        url = reverse('admin:student_loginfailures_change')
+        url = reverse('admin:student_loginfailures_change', args=(1, ))
         start_count = LoginFailures.objects.count()
-        with override_settings(
-            FEATURES=dict(
-                settings.FEATURES,
-                **{'ENABLE_MAX_FAILED_LOGIN_ATTEMPTS': True}
-            )
-        ):
-            response = self.client.post(
-                url,
-                {'action': 'unlock_student_accounts',
-                 '_selected_action': [unicode(o.pk) for o in LoginFailures.objects.first()],
-                 '_unlock': {}}
-            )
+        self.client.post(
+            url,
+            data={'_unlock': 1}
+        )
         count = LoginFailures.objects.count()
-        self.assertEqual(count, start_count-1)
+        self.assertEqual(count, start_count - 1)

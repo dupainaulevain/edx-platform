@@ -2,7 +2,6 @@
 from config_models.admin import ConfigurationModelAdmin
 from django import forms
 from django.db import router, transaction
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.admin.utils import unquote
@@ -13,6 +12,7 @@ from django.db import models
 from django.http import HttpResponseRedirect
 from django.http.request import QueryDict
 from django.utils.translation import ugettext_lazy as _, ngettext
+from django.urls import reverse
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
@@ -330,11 +330,11 @@ class LoginFailuresAdmin(admin.ModelAdmin):
     actions = ['unlock_student_accounts']
     change_form_template = 'admin/student/loginfailures/change_form_template.html'
 
-    def has_module_permission(self, request):
+    def has_pem(self, request, method):
         """Returns false if feature is not enabled and calls super if feature is enabled.
         """
         if self.model.is_feature_enabled():
-            return super(LoginFailuresAdmin, self).has_module_permission(request)
+            return method(request)
         return False
 
     def has_delete_permission(self, request, obj=None):
@@ -343,21 +343,21 @@ class LoginFailuresAdmin(admin.ModelAdmin):
         To delete a login failure the ``unlock_student_accounts`` action or the *Unlock* button
         should be used.
         """
-        return False
+        return self.has_pem(request, super(LoginFailuresAdmin, self).has_module_permission)
 
     def has_change_permission(self, request, obj=None):
         """Will always return false.
 
         Admin users should not update Login Failures records.
         """
-        return False
+        return self.has_pem(request, super(LoginFailuresAdmin, self).has_change_permission)
 
     def has_add_permission(self, request):
         """Will always return false.
 
         Login Failure records should only be added if there's a login failure and not manually.
         """
-        return False
+        return self.has_pem(request, super(LoginFailuresAdmin, self).has_add_permission)
 
     def unlock_student_accounts(self, request, queryset):
         """Unlock student accounts with login failures."""
@@ -369,8 +369,8 @@ class LoginFailuresAdmin(admin.ModelAdmin):
         self.message_user(
             request,
             ngettext(
-                '%(count)d student account was unlocked.', 
-                '%(count)d student accounts were unlocked.', 
+                '%(count)d student account was unlocked.',
+                '%(count)d student accounts were unlocked.',
                 count
             ) % {
                 'count': count
