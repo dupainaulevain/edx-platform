@@ -331,36 +331,35 @@ class LoginFailuresAdmin(admin.ModelAdmin):
     change_form_template = 'admin/student/loginfailures/change_form_template.html'
 
     def has_pem(self, request, method):
-        """Returns false if feature is not enabled and calls super if feature is enabled.
+        """
+        Returns false if feature is not enabled and calls super if feature is enabled.
         """
         if self.model.is_feature_enabled():
             return method(request)
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Will always return false.
-
-        To delete a login failure the ``unlock_student_accounts`` action or the *Unlock* button
-        should be used.
+        """
+        Only enabled if feature is enabled.
         """
         return self.has_pem(request, super(LoginFailuresAdmin, self).has_module_permission)
 
     def has_change_permission(self, request, obj=None):
-        """Will always return false.
-
-        Admin users should not update Login Failures records.
+        """
+        Only enabled if feature is enabled.
         """
         return self.has_pem(request, super(LoginFailuresAdmin, self).has_change_permission)
 
     def has_add_permission(self, request):
-        """Will always return false.
-
-        Login Failure records should only be added if there's a login failure and not manually.
+        """
+        Only enabled if feature is enabled.
         """
         return self.has_pem(request, super(LoginFailuresAdmin, self).has_add_permission)
 
     def unlock_student_accounts(self, request, queryset):
-        """Unlock student accounts with login failures."""
+        """
+        Unlock student accounts with login failures.
+        """
         count = 0
         with transaction.atomic(using=router.db_for_write(self.model)):
             for obj in queryset:
@@ -378,7 +377,11 @@ class LoginFailuresAdmin(admin.ModelAdmin):
         )
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        """Change View."""
+        """
+        Change View.
+
+        This is overridden so we can add a custom button to unlock an account in the record's details.
+        """
         if '_unlock' in request.POST:
             with transaction.atomic(using=router.db_for_write(self.model)):
                 self.unlock_student(request, object_id=object_id)
@@ -387,14 +390,18 @@ class LoginFailuresAdmin(admin.ModelAdmin):
         return super(LoginFailuresAdmin, self).change_view(request, object_id, form_url, extra_context)
 
     def get_actions(self, request):
-        """Get actions for model admin."""
+        """
+        Get actions for model admin and remove delete action.
+        """
         actions = super(LoginFailuresAdmin, self).get_actions(request)
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
 
     def unlock_student(self, request, object_id=None, obj=None):
-        """Unlock student account."""
+        """
+        Unlock student account.
+        """
         record = obj
         if object_id:
             record = self.get_object(request, unquote(object_id))
