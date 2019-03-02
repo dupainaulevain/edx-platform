@@ -18,7 +18,7 @@ import six
 import uuid
 from collections import OrderedDict, defaultdict, namedtuple
 from datetime import datetime, timedelta
-from functools import total_ordering
+from functools import total_ordering, wraps
 from importlib import import_module
 from urllib import urlencode
 
@@ -878,11 +878,21 @@ class LoginFailures(models.Model):
         return records.get()
 
     @classmethod
-    def is_feature_enabled(cls):
+    def is_feature_enabled(cls, func=None):
         """
         Returns whether the feature flag around this functionality has been set
         """
-        return settings.FEATURES['ENABLE_MAX_FAILED_LOGIN_ATTEMPTS']
+        enabled = settings.FEATURES['ENABLE_MAX_FAILED_LOGIN_ATTEMPTS']
+        if func is None:
+            return enabled
+
+        @wraps(func)
+        def decorator(*args, **kwargs):
+            """Decorator to check if feature is enabled."""
+            if not enabled:
+                return False
+            return func(*args, **kwargs)
+        return decorator
 
     @classmethod
     def is_user_locked_out(cls, user):

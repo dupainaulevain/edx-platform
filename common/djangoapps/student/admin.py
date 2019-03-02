@@ -1,4 +1,5 @@
 """ Django admin pages for student app """
+from functools import wraps
 from config_models.admin import ConfigurationModelAdmin
 from django import forms
 from django.db import router, transaction
@@ -326,35 +327,37 @@ class LoginFailuresAdmin(admin.ModelAdmin):
     """Admin interface for the LoginFailures model. """
     list_display = ('user', 'failure_count', 'lockout_until')
     raw_id_fields = ('user',)
-    search_fields = ('user__username', 'user__email')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
     actions = ['unlock_student_accounts']
     change_form_template = 'admin/student/loginfailures/change_form_template.html'
 
-    def has_pem(self, request, method):
+    @LoginFailures.is_feature_enabled
+    def has_module_permission(self, request):
         """
-        Returns false if feature is not enabled and calls super if feature is enabled.
+        Only enabled if feature is enabled.
         """
-        if self.model.is_feature_enabled():
-            return method(request)
-        return False
+        return super(LoginFailuresAdmin, self).has_module_permission(request)
 
+    @LoginFailures.is_feature_enabled
     def has_delete_permission(self, request, obj=None):
         """
         Only enabled if feature is enabled.
         """
-        return self.has_pem(request, super(LoginFailuresAdmin, self).has_module_permission)
+        return super(LoginFailuresAdmin, self).has_delete_permission(request, obj)
 
+    @LoginFailures.is_feature_enabled
     def has_change_permission(self, request, obj=None):
         """
         Only enabled if feature is enabled.
         """
-        return self.has_pem(request, super(LoginFailuresAdmin, self).has_change_permission)
+        return request, super(LoginFailuresAdmin, self).has_change_permission(request, obj)
 
+    @LoginFailures.is_feature_enabled
     def has_add_permission(self, request):
         """
         Only enabled if feature is enabled.
         """
-        return self.has_pem(request, super(LoginFailuresAdmin, self).has_add_permission)
+        return request, super(LoginFailuresAdmin, self).has_add_permission(request)
 
     def unlock_student_accounts(self, request, queryset):
         """
@@ -402,11 +405,10 @@ class LoginFailuresAdmin(admin.ModelAdmin):
         """
         Unlock student account.
         """
-        record = obj
         if object_id:
-            record = self.get_object(request, unquote(object_id))
+            obj = self.get_object(request, unquote(object_id))
 
-        self.model.clear_lockout_counter(record.user)
+        self.model.clear_lockout_counter(obj.user)
 
 
 admin.site.register(UserTestGroup)
