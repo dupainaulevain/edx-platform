@@ -307,10 +307,16 @@ class CourseEnrollmentAdminTest(SharedModuleStoreTestCase):
 class LoginFailuresAdminTest(TestCase):
     """Test Login Failures Admin."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Setup class"""
+        super(LoginFailuresAdminTest, cls).setUpClass()
+        cls.user = UserFactory.create(is_staff=True, is_superuser=True)
+        cls.user.save()
+
     def setUp(self):
         """Setup."""
         super(LoginFailuresAdminTest, self).setUp()
-        self.user = UserFactory.create(is_staff=True, is_superuser=True)
         self.client.login(username=self.user.username, password='test')
         user = UserFactory.create()
         LoginFailures.objects.create(user=self.user, failure_count=10, lockout_until=datetime.datetime.now())

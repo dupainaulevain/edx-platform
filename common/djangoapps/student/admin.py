@@ -350,14 +350,14 @@ class LoginFailuresAdmin(admin.ModelAdmin):
         """
         Only enabled if feature is enabled.
         """
-        return request, super(LoginFailuresAdmin, self).has_change_permission(request, obj)
+        return super(LoginFailuresAdmin, self).has_change_permission(request, obj)
 
     @LoginFailures.is_feature_enabled
     def has_add_permission(self, request):
         """
         Only enabled if feature is enabled.
         """
-        return request, super(LoginFailuresAdmin, self).has_add_permission(request)
+        return super(LoginFailuresAdmin, self).has_add_permission(request)
 
     def unlock_student_accounts(self, request, queryset):
         """
