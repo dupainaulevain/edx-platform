@@ -32,10 +32,10 @@ class CapaModule(CapaMixin, XModule):
     js = {
         'js': [
             resource_string(__name__, 'js/src/javascript_loader.js'),
-            resource_string(__name__, 'js/src/capa/display.js'),
+            resource_string(__name__, 'js/common_static/js/capa/src/display.js'),
             resource_string(__name__, 'js/src/collapsible.js'),
-            resource_string(__name__, 'js/src/capa/imageinput.js'),
-            resource_string(__name__, 'js/src/capa/schematic.js'),
+            resource_string(__name__, 'js/common_static/js/capa/src/imageinput.js'),
+            resource_string(__name__, 'js/common_static/js/capa/src/schematic.js'),
         ]
     }
 
@@ -154,7 +154,7 @@ class CapaDescriptor(CapaFields, RawDescriptor):
     show_in_read_only_mode = True
     template_dir_name = 'problem'
     mako_template = "widgets/problem-edit.html"
-    js = {'js': [resource_string(__name__, 'js/src/problem/edit.js')]}
+    js = {'js': [resource_string(__name__, 'js/common_static/js/capa/src/edit.js')]}
     js_module_name = "MarkdownEditingDescriptor"
     has_author_view = True
     css = {

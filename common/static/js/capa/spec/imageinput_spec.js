@@ -12,7 +12,7 @@
         beforeEach(function() {
             var $el;
 
-            loadFixtures('imageinput.html');
+            loadFixtures('js/capa/fixtures/imageinput.html');
             $el = $('#imageinput_12345');
 
             $el.append(createTestImage('cross_12345', 300, 400, 'red'));

@@ -40,7 +40,15 @@ var options = {
         {pattern: 'common/js/spec_helpers/jasmine-extensions.js', included: true},
         {pattern: 'common/js/spec_helpers/jasmine-waituntil.js', included: true},
         {pattern: 'common/js/spec_helpers/discussion_spec_helper.js', included: true},
-        {pattern: 'common/js/spec/discussion/view/discussion_view_spec_helper.js', included: true}
+        {pattern: 'common/js/spec/discussion/view/discussion_view_spec_helper.js', included: true},
+
+        // For XModules converted to XBlocks
+        {pattern: '../lib/xmodule/xmodule/js/src/xmodule.js', included: true},
+
+        // For CAPA
+        {pattern: 'js/vendor/CodeMirror/codemirror.js', included: true},
+        {pattern: '../lib/xmodule/xmodule/js/src/collapsible.js', included: true},
+        {pattern: '../lib/xmodule/xmodule/js/src/javascript_loader.js', included: true},
     ],
 
     libraryFiles: [
@@ -64,7 +72,7 @@ var options = {
 
     fixtureFiles: [
         {pattern: 'js/fixtures/**/*.html'},
-        {pattern: 'js/capa/fixtures/**/*.html'},
+        {pattern: 'js/capa/fixtures/**/*.*'},
         {pattern: 'common/templates/**/*.underscore'}
     ]
 };

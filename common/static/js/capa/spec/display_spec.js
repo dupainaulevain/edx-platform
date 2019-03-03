@@ -5,7 +5,36 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 describe('Problem', function() {
-  const problem_content_default = readFixtures('problem_content.html');
+
+  var origAjax = $.ajax;
+  var stubRequests = function() {
+        var spy = $.ajax;
+        if (!jasmine.isSpy($.ajax)) {
+            spy = spyOn($, 'ajax');
+        }
+
+        return spy.and.callFake(function(settings) {
+            if (settings.url.match(/.+\/problem_get$/)) {
+                return settings.success({
+                    html: window.readFixtures('js/capa/fixtures/problem_content.html')
+                });
+            } else if (
+                settings.url === '/calculate' ||
+                settings.url.match(/.+\/goto_position$/) ||
+                settings.url.match(/event$/) ||
+                settings.url.match(/.+\/problem_(check|reset|show|save)$/)
+            ) {
+                // Do nothing.
+                return {};
+            } else if (settings.url === '/save_user_state') {
+                return {success: true};
+            } else if (settings.url.match(new RegExp(jasmine.getFixtures().fixturesPath + '.+', 'g'))) {
+                return origAjax(settings);
+            } else {
+                return $.ajax.and.callThrough();
+            }
+        });
+    };
 
   beforeEach(function() {
     // Stub MathJax
@@ -19,17 +48,16 @@ describe('Problem', function() {
     spyOn(SR, 'readText');
     spyOn(SR, 'readTexts');
 
-    // Load this function from spec/helper.js
     // Note that if your test fails with a message like:
     // 'External request attempted for blah, which is not defined.'
     // this msg is coming from the stubRequests function else clause.
-    jasmine.stubRequests();
+    stubRequests();
 
-    loadFixtures('problem.html');
+    loadFixtures('js/capa/fixtures/problem.html');
 
     spyOn(Logger, 'log');
     spyOn($.fn, 'load').and.callFake(function(url, callback) {
-      $(this).html(readFixtures('problem_content.html'));
+      $(this).html(readFixtures('js/capa/fixtures/problem_content.html'));
       return callback();
     });
   });
@@ -97,7 +125,7 @@ data-url='/problem/quiz/'> \
       spyOn(window, 'update_schematics');
       MathJax.Hub.getAllJax.and.returnValue([this.stubbedJax]);
       this.problem = new Problem($('.xblock-student_view'));
-      return $(this).html(readFixtures('problem_content_1240.html'));
+      return $(this).html(readFixtures('js/capa/fixtures/problem_content_1240.html'));
     });
 
     it('bind the submit button', function() {
@@ -398,8 +426,8 @@ data-url='/problem/quiz/'> \
     );
 
     describe('some advanced tests for submit button', function() {
-      const radioButtonProblemHtml = readFixtures('radiobutton_problem.html');
-      const checkboxProblemHtml = readFixtures('checkbox_problem.html');
+      const radioButtonProblemHtml = readFixtures('js/capa/fixtures/radiobutton_problem.html');
+      const checkboxProblemHtml = readFixtures('js/capa/fixtures/checkbox_problem.html');
 
       it('should become enabled after a checkbox is checked', function() {
         $('#input_example_1').replaceWith(checkboxProblemHtml);
@@ -678,7 +706,7 @@ data-url='/problem/quiz/'> \
 
       describe('imageinput', function() {
         let el, height, width;
-        const imageinput_html = readFixtures('imageinput.underscore');
+        const imageinput_html = readFixtures('js/capa/fixtures/imageinput.underscore');
 
         const DEFAULTS = {
           id: '12345',
@@ -990,7 +1018,7 @@ data-url='/problem/quiz/'> \
   });
 
   describe('multiple JsInput in single problem', function() {
-    const jsinput_html = readFixtures('jsinput_problem.html');
+    const jsinput_html = readFixtures('js/capa/fixtures/jsinput_problem.html');
 
     beforeEach(function() {
       this.problem = new Problem($('.xblock-student_view'));
@@ -1004,7 +1032,7 @@ data-url='/problem/quiz/'> \
   });
 
   describe('Submitting an xqueue-graded problem', function() {
-    const matlabinput_html = readFixtures('matlabinput_problem.html');
+    const matlabinput_html = readFixtures('js/capa/fixtures/matlabinput_problem.html');
 
     beforeEach(function() {
       spyOn($, 'postWithPrefix').and.callFake((url, callback) => callback({html: matlabinput_html}));
@@ -1038,7 +1066,7 @@ data-url='/problem/quiz/'> \
   });
 
   describe('codeinput problem', function() {
-    const codeinputProblemHtml = readFixtures('codeinput_problem.html');
+    const codeinputProblemHtml = readFixtures('js/capa/fixtures/codeinput_problem.html');
 
     beforeEach(function() {
       spyOn($, 'postWithPrefix').and.callFake((url, callback) => callback({html: codeinputProblemHtml}));
@@ -1064,8 +1092,8 @@ data-url='/problem/quiz/'> \
 
   describe('show answer button', function() {
 
-    const radioButtonProblemHtml = readFixtures('radiobutton_problem.html');
-    const checkboxProblemHtml = readFixtures('checkbox_problem.html');
+    const radioButtonProblemHtml = readFixtures('js/capa/fixtures/radiobutton_problem.html');
+    const checkboxProblemHtml = readFixtures('js/capa/fixtures/checkbox_problem.html');
 
     beforeEach(function() {
       this.problem = new Problem($('.xblock-student_view'));
