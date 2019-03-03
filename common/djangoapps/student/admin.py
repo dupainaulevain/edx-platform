@@ -331,28 +331,41 @@ class LoginFailuresAdmin(admin.ModelAdmin):
     actions = ['unlock_student_accounts']
     change_form_template = 'admin/student/loginfailures/change_form_template.html'
 
-    @LoginFailures.is_feature_enabled
+    class _Feature(object):
+        """Inner feature class to implement decorator."""
+        @classmethod
+        def is_enabled(cls, func):
+            """Check if feature is enabled."""
+            @wraps(func)
+            def decorator(*args, **kwargs):
+                """Decorator class to return"""
+                if not LoginFailures.is_feature_enabled():
+                    return False
+                return func(*args, **kwargs)
+            return decorator
+
+    @_Feature.is_enabled
     def has_module_permission(self, request):
         """
         Only enabled if feature is enabled.
         """
         return super(LoginFailuresAdmin, self).has_module_permission(request)
 
-    @LoginFailures.is_feature_enabled
+    @_Feature.is_enabled
     def has_delete_permission(self, request, obj=None):
         """
         Only enabled if feature is enabled.
         """
         return super(LoginFailuresAdmin, self).has_delete_permission(request, obj)
 
-    @LoginFailures.is_feature_enabled
+    @_Feature.is_enabled
     def has_change_permission(self, request, obj=None):
         """
         Only enabled if feature is enabled.
         """
         return super(LoginFailuresAdmin, self).has_change_permission(request, obj)
 
-    @LoginFailures.is_feature_enabled
+    @_Feature.is_enabled
     def has_add_permission(self, request):
         """
         Only enabled if feature is enabled.
