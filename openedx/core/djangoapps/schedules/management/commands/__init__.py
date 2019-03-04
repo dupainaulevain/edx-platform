@@ -24,6 +24,7 @@ class SendEmailBaseCommand(PrefixedDebugLoggerMixin, BaseCommand):
         parser.add_argument('site_domain_name')
         parser.add_argument(
             '--duration',
+            type=int,
             help='The duration for which weekly emails are sent (days).',
         )
 
