@@ -332,10 +332,14 @@ class LoginFailuresAdmin(admin.ModelAdmin):
     change_form_template = 'admin/student/loginfailures/change_form_template.html'
 
     class _Feature(object):
-        """Inner feature class to implement decorator."""
+        """
+        Inner feature class to implement decorator.
+        """
         @classmethod
         def is_enabled(cls, func):
-            """Check if feature is enabled."""
+            """
+            Check if feature is enabled.
+            """
             @wraps(func)
             def decorator(*args, **kwargs):
                 """Decorator class to return"""
