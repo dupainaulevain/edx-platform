@@ -94,12 +94,9 @@ class TestBinnedSchedulesBaseResolver(SchedulesResolverTestMixin, TestCase):
         self.assertEqual(result, mock_query.exclude.return_value)
 
 
-@ddt.ddt
 @skip_unless_lms
 @skipUnless('openedx.core.djangoapps.schedules.apps.SchedulesConfig' in settings.INSTALLED_APPS,
             "Can't test schedules if the app isn't installed")
-@override_waffle_flag(COURSE_UPDATE_WAFFLE_FLAG, True)
-@freeze_time('2017-08-01 01:00:00', tz_offset=0, tick=False)
 class TestCourseUpdateResolver(SchedulesResolverTestMixin, ModuleStoreTestCase):
     """
     Tests the CourseUpdateResolver.
@@ -126,6 +123,7 @@ class TestCourseUpdateResolver(SchedulesResolverTestMixin, ModuleStoreTestCase):
             bin_num=1,
         )
 
+    @override_waffle_flag(COURSE_UPDATE_WAFFLE_FLAG, True)
     def test_schedule_context(self):
         resolver = self.create_resolver()
         schedules = list(resolver.schedules_for_bin())
@@ -148,6 +146,7 @@ class TestCourseUpdateResolver(SchedulesResolverTestMixin, ModuleStoreTestCase):
         }
         self.assertEqual(schedules, [(self.user, None, expected_context)])
 
+    @override_waffle_flag(COURSE_UPDATE_WAFFLE_FLAG, True)
     @override_switch('schedules.course_update_show_unsubscribe', True)
     def test_schedule_context_show_unsubscribe(self):
         resolver = self.create_resolver()
